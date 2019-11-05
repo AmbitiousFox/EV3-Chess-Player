@@ -16,11 +16,13 @@ void calibrateClaw()
 	motor[x_motor] = 0;
 	nMotorEncoder(x_motor) = 0;
 		
-	motor[y_motor] = -20;
+	motor[y_motor1] = -20;
+	motor[y_motor2] = -20;
 	while(!SensorValue[S2]) {}
-	motor[y_motor] = 0;
-	nMotorEncoder(y_motor) = 0;
+	motor[y_motor1] = motor[y_motor2] = 0;
+	nMotorEncoder(y_motor1) = nMotorEncoder(y_motor2) = 0;
  } // end function
+ 
 
 void moveArm(int x, int y) 
 {
