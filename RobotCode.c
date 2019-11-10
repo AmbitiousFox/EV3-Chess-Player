@@ -52,54 +52,55 @@ void moveArm(int x, int y)
 	move_x(x);
 }
 
-/*
+
 void closeOpenClaw(int piece)
 {
+	const int claw_y = motorB;
 
 	const double CLAW_WHEEL = 1;
 	const double DIST_PER_ROTATION = CLAW_WHEEL*PI*2;
-	const double EXTEND_DIST = 1.5;
-	const double CLAW_TOL = 0.05;
+	const double EXTEND_DIST = 30;
+	//const double CLAW_TOL = 0.05;
 
-	if(nMotorEncoder(claw_y) > 0 + CLAW_TOL)
+	if(nMotorEncoder(claw_y)/360.0*DIST_PER_ROTATION < EXTEND_DIST)
 	{
-		motor[claw_y] = -10;
-		while(nMotorEncoder*DIST_PER_ROTATION > 0) {}
+		motor[claw_y] = 100;
+		while(nMotorEncoder(claw_y)/360.0*DIST_PER_ROTATION < EXTEND_DIST) {}
 	}
 	else
 	{
-		motor[claw_y] = 10;
-		while(nMotorEncoder*DIST_PER_ROTATION < piece+EXTEND_DIST+CLAW_TOL) {}
+		motor[claw_y] = -100;
+		while(nMotorEncoder(claw_y)/360.0*DIST_PER_ROTATION > 0) {}
 	}
 	motor[claw_y] = 0;
+	wait1Msec(1000);
 }
 
 void raiseLowerClaw()
 {
-	int sign = 0;
+	const int claw_z = motorA;
 
-	const double CLAWZ_WHEEL = 1;
-	const double DIST_PER_ROTATION = CLAWZ_WHEEL*PI*2;
-	const double EXTEND_DIST = 1.5;
-	const double CLAWZ_TOL = 0.05;
+	const float CLAWZ_WHEEL = 1;
+	const float DIST_PER_ROTATION = CLAWZ_WHEEL*PI*2;
+	const float EXTEND_DIST = 6;
+	//const float CLAWZ_TOL = 0.05;
 
-	if(nMotorEncoder(claw_z) > 0 + CLAWZ_TOL)
+	if(nMotorEncoder(claw_z)/360.0*DIST_PER_ROTATION < -EXTEND_DIST)
 	{
-		motor[claw_z] = -10;
-		while(nMotorEncoder(claw_z)*DIST_PER_ROTATION > EXTEND_DIST) {}
+		motor[claw_z] = 40;
+		while(nMotorEncoder(claw_z)/360.0*DIST_PER_ROTATION < 0) {}
 	}
 	else
 	{
-		motor[claw_z] = 10;
-		while(nMotorEncoder(claw_z)*DIST_PER_ROTATION < EXTEND_DIST) {}
+		motor[claw_z] = -40;
+		while(nMotorEncoder(claw_z)/360.0*DIST_PER_ROTATION > -EXTEND_DIST) {}
 	}
 
 	motor[claw_z] = 0;
-}*/
+	wait1Msec(500);
+}
 
 task main()
 {
-	nMotorEncoder(motorA) = nMotorEncoder(motorB) = nMotorEncoder(motorC) = nMotorEncoder(motorD) = 0;
-	move_x(8);
-	move_x(1);
+	//nMotorEncoder(motorA) = nMotorEncoder(motorB) = nMotorEncoder(motorC) = nMotorEncoder(motorD) = 0;
 }
