@@ -21,6 +21,7 @@ void move_y(int y)
 		while(nMotorEncoder(y_motor1)/360.0*DIST_PER_ROTATION > y*SQUARE_SIDE) {}
 		motor[y_motor1] = motor[y_motor2] = 0;
 	}
+	wait1Msec(200);
 }
 
 void move_x(int x)
@@ -89,45 +90,5 @@ void raiseLowerClaw()
 task main()
 {
 	nMotorEncoder(motorA) = nMotorEncoder(motorB) = nMotorEncoder(motorC) = nMotorEncoder(motorD) = 0;
-	move_y(8);
-	wait1Msec(100);
-	move_y(1);
-	// testing the function that moves the robot one square down
-	/*
-	while(!getButtonPress(buttonEnter))
-	{
-		if(getButtonPress(buttonLeft))
-		{
-			motor[y_motor1] = motor[y_motor2] = 20;
-			while(getButtonPress(buttonLeft)) {}
-			motor[y_motor1] = motor[y_motor2] = 0;
-		}
-		if(getButtonPress(buttonRight))
-		{
-			motor[y_motor1] = motor[y_motor2] = -20;
-			while(getButtonPress(buttonRight)) {}
-			motor[y_motor1] = motor[y_motor2] = 0;
-		}
-	*/
 
-	//simple button tests;
-	/*
-	const int y_motor1 = motorA;
-	const int y_motor2 = motorB;
-	while(!getButtonPress(buttonEnter))
-	{
-		if(getButtonPress(buttonLeft))
-		{
-			motor[y_motor1] = motor[y_motor2] = 20;
-			while(getButtonPress(buttonLeft)) {}
-			motor[y_motor1] = motor[y_motor2] = 0;
-		}
-		if(getButtonPress(buttonRight))
-		{
-			motor[y_motor1] = motor[y_motor2] = -20;
-			while(getButtonPress(buttonRight)) {}
-			motor[y_motor1] = motor[y_motor2] = 0;
-		}
-	}
-	*/
 }
