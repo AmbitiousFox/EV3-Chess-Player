@@ -57,9 +57,9 @@ void closeOpenClaw(int piece)
 {
 	const int claw_y = motorB;
 
-	const double CLAW_WHEEL = 1;
-	const double DIST_PER_ROTATION = CLAW_WHEEL*PI*2;
-	const double EXTEND_DIST = 30;
+	const float CLAW_WHEEL = 1;
+	const float DIST_PER_ROTATION = CLAW_WHEEL*PI*2;
+	const float EXTEND_DIST = 30;
 	//const double CLAW_TOL = 0.05;
 
 	if(nMotorEncoder(claw_y)/360.0*DIST_PER_ROTATION < EXTEND_DIST)
@@ -102,5 +102,5 @@ void raiseLowerClaw()
 
 task main()
 {
-	//nMotorEncoder(motorA) = nMotorEncoder(motorB) = nMotorEncoder(motorC) = nMotorEncoder(motorD) = 0;
+
 }
