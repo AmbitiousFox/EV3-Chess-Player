@@ -26,14 +26,24 @@ void move_y(int y)
 
 void move_x(int x)
 {
-	int x_motor = motorA;
+	const int x_motor = motorA;
 
 	const int SQUARE_SIDE = 3;
 	const float DIST_PER_ROTATION = WHEEL_RADI*PI*2;
 
-	motor[x_motor] = 20;
-	while(nMotorEncoder(x_motor)/360.0*DIST_PER_ROTATION < x*SQUARE_SIDE) {}
-	motor[x_motor] = 0;
+	if(nMotorEncoder(x_motor)/360.0*DIST_PER_ROTATION < x*SQUARE_SIDE)
+	{
+		motor[x_motor] = 20;
+		while(nMotorEncoder(x_motor)/360.0*DIST_PER_ROTATION < x*SQUARE_SIDE) {}
+		motor[x_motor] = 0;
+	}
+	else
+	{
+		motor[x_motor] = -40;
+		while(nMotorEncoder(x_motor)/360.0*DIST_PER_ROTATION > x*SQUARE_SIDE) {}
+		motor[x_motor] = 0;
+	}
+	wait1Msec(200);
 }
 
 void moveArm(int x, int y)
@@ -90,5 +100,6 @@ void raiseLowerClaw()
 task main()
 {
 	nMotorEncoder(motorA) = nMotorEncoder(motorB) = nMotorEncoder(motorC) = nMotorEncoder(motorD) = 0;
-
+	move_x(8);
+	move_x(1);
 }
