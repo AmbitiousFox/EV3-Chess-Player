@@ -1,16 +1,16 @@
 
-const float WHEEL_RADI = 2.75;
+const float WHEEL_RADI = 2.00;
 
 void move_y(int y)
 {
 	const int y_motor1 = motorA;
 	const int y_motor2 = motorB;
 
-	const int SQUARE_SIDE = 3;
+	const float SQUARE_SIDE = 3;
 	const float DIST_PER_ROTATION = WHEEL_RADI*PI*2;
 
 	motor[y_motor1] = motor[y_motor2] = 20;
-	while(nMotorEncoder(y_motor1)*DIST_PER_ROTATION < y*SQUARE_SIDE) {}
+	while(nMotorEncoder(y_motor1)/360.0*DIST_PER_ROTATION < y*SQUARE_SIDE) {}
 	motor[y_motor1] = motor[y_motor2] = 0;
 }
 
@@ -22,7 +22,7 @@ void move_x(int x)
 	const float DIST_PER_ROTATION = WHEEL_RADI*PI*2;
 
 	motor[x_motor] = 20;
-	while(nMotorEncoder(x_motor)*DIST_PER_ROTATION < x*SQUARE_SIDE) {}
+	while(nMotorEncoder(x_motor)/360.0*DIST_PER_ROTATION < x*SQUARE_SIDE) {}
 	motor[x_motor] = 0;
 }
 
@@ -79,6 +79,28 @@ void raiseLowerClaw()
 
 task main()
 {
+	nMotorEncoder(motorA) = nMotorEncoder(motorB) = nMotorEncoder(motorC) = nMotorEncoder(motorD) = 0;
+	move_y(1);
+	// testing the function that moves the robot one square down
+	/*
+	while(!getButtonPress(buttonEnter))
+	{
+		if(getButtonPress(buttonLeft))
+		{
+			motor[y_motor1] = motor[y_motor2] = 20;
+			while(getButtonPress(buttonLeft)) {}
+			motor[y_motor1] = motor[y_motor2] = 0;
+		}
+		if(getButtonPress(buttonRight))
+		{
+			motor[y_motor1] = motor[y_motor2] = -20;
+			while(getButtonPress(buttonRight)) {}
+			motor[y_motor1] = motor[y_motor2] = 0;
+		}
+	*/
+
+	//simple button tests;
+	/*
 	const int y_motor1 = motorA;
 	const int y_motor2 = motorB;
 	while(!getButtonPress(buttonEnter))
@@ -95,5 +117,6 @@ task main()
 			while(getButtonPress(buttonRight)) {}
 			motor[y_motor1] = motor[y_motor2] = 0;
 		}
-}
+	}
+	*/
 }
