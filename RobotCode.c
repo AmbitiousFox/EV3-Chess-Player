@@ -103,6 +103,4 @@ void raiseLowerClaw()
 task main()
 {
 	//nMotorEncoder(motorA) = nMotorEncoder(motorB) = nMotorEncoder(motorC) = nMotorEncoder(motorD) = 0;
-	closeOpenClaw(1);
-	closeOpenClaw(1);
 }
