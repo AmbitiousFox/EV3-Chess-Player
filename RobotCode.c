@@ -1,29 +1,41 @@
-/*
 
 const double WHEEL_RADI = 2.75;
 
-void moveArm(int x, int y)
+void move_y(int y)
 {
-	int x_motor = motorA;
-	int y_motor1 = motorB;
-	int y_motor2 = motorC;
+	const int y_motor1 = motorA;
+	const int y_motor2 = motorB;
 
 	const int SQUARE_SIDE = 3;
-
 	const double DIST_PER_ROTATION = WHEEL_RADI*PI*2;
-
-	motor[x_motor] = 20;
-	while(nMotorEncoder(x_motor)*DIST_PER_ROTATION < x*SQUARE_SIDE) {}
-	motor[x_motor] = 0;
 
 	motor[y_motor1] = motor[y_motor2] = 20;
 	while(nMotorEncoder(y_motor1)*DIST_PER_ROTATION < y*SQUARE_SIDE) {}
 	motor[y_motor1] = motor[y_motor2] = 0;
 }
 
+void move_x(int x)
+{
+	int x_motor = motorA;
+
+	const int SQUARE_SIDE = 3;
+	const double DIST_PER_ROTATION = WHEEL_RADI*PI*2;
+
+	motor[x_motor] = 20;
+	while(nMotorEncoder(x_motor)*DIST_PER_ROTATION < x*SQUARE_SIDE) {}
+	motor[x_motor] = 0;
+}
+
+void moveArm(int x, int y)
+{
+	move_y(y);
+	move_x(x);
+}
+
+/*
 void closeOpenClaw(int piece)
 {
-	int
+
 	const double CLAW_WHEEL = 1;
 	const double DIST_PER_ROTATION = CLAW_WHEEL*PI*2;
 	const double EXTEND_DIST = 1.5;
@@ -40,7 +52,7 @@ void closeOpenClaw(int piece)
 		while(nMotorEncoder*DIST_PER_ROTATION < piece+EXTEND_DIST+CLAW_TOL) {}
 	}
 	motor[claw_y] = 0;
-}*/
+}
 
 void raiseLowerClaw()
 {
@@ -63,7 +75,7 @@ void raiseLowerClaw()
 	}
 
 	motor[claw_z] = 0;
-}
+}*/
 
 task main()
 {
