@@ -1,3 +1,6 @@
+#include "mindsensors-motormux.h"
+
+
 // chess board (DOES THIS NEED TO BE INITITALIZED????)
 int chess_board[8][8];
 
@@ -24,37 +27,41 @@ const int WHITE_QUEEN = 10;
 const int WHITE_KING = 11;
 
 // motors (edit these)
-const int x_motor1 = motorA;
-const int x_motor2 = motorB;
+const int x_motor1 = mmotor_S3_1;
+const int x_motor2 = mmotor_S3_2;
 const int y_motor = motorA;
 const int z_motor = motorB;
 const int claw_motor = motorC;
 
 
 /*
- * Moves the robot in the x direction to tile x.
+ * Moves the robot in the x direction to column x.
  */
 void move_x(int x)
 {
 	const float DIST_PER_ROTATION = WHEEL_RADI*PI*2;
 
-	if(nMotorEncoder(x_motor1)/360.0*DIST_PER_ROTATION < x*TILE_SIDE)
+	if(MSMMotorEncoder(x_motor1)/360.0*DIST_PER_ROTATION < x*TILE_SIDE)
 	{
-		motor[x_motor1] = motor[x_motor2] = 20;
-		while(nMotorEncoder(x_motor1)/360.0*DIST_PER_ROTATION < x*TILE_SIDE) {}
-		motor[x_motor1] = motor[x_motor2] = 0;
+		MSMMotor(x_motor1, 20);
+		MSMMotor(x_motor2, 20);
+		while(MSMMotorEncoder(x_motor1)/360.0*DIST_PER_ROTATION < x*TILE_SIDE) {}
+		MSMotorStop(x_motor1);
+		MSMotorStop(x_motor2);
 	}
 	else
 	{
-		motor[x_motor1] = motor[x_motor2] = -20;
-		while(nMotorEncoder(x_motor1)/360.0*DIST_PER_ROTATION > x*TILE_SIDE) {}
-		motor[x_motor1] = motor[x_motor2] = 0;
+		MSMMotor(x_motor1, -20);
+		MSMMotor(x_motor2, -20);
+		while(MSMMotorEncoder(x_motor1)/360.0*DIST_PER_ROTATION > x*TILE_SIDE) {}
+		MSMotorStop(x_motor1);
+		MSMotorStop(x_motor2);
 	}
 	wait1Msec(200);
 }
 
 /*
- * Moves the robot in the y direction to tile y.
+ * Moves the robot in the y direction to row y.
  */
 void move_y(int y)
 {
@@ -226,5 +233,7 @@ void replaySavedMatch()
 // main
 task main()
 {
-
+	// initialize motor multiplexer
+	SensorType[S3] = sensorI2CCustom;
+	MSMMUXinit();
 }
