@@ -1,16 +1,28 @@
 #include "mindsensors-motormux.h"
 
 
-// chess board (DOES THIS NEED TO BE INITITALIZED????)
-int chess_board[8][8];
+// chess piece type
+struct piece
+{
+	int piece_type;
+	float extend_dist;
+	bool colour; // true = white, false = black
+};
+
+// chess board
+piece chess_board[8][8];
 
 // extra / captured pieces
-int white_extra_pieces[3][8];
-int black_extra_pieces[3][8];
+piece white_extra_pieces[3][8];
+piece black_extra_pieces[3][8];
 
 // physical system constants
 const float WHEEL_RADI = 2.00;
 const float TILE_SIDE = 3;
+const float EXTEND_DIST_Z = 5.2;
+const float DIST_PER_ROTATION_X = WHEEL_RADI*PI*2;
+const float DIST_PER_ROTATION_Y = WHEEL_RADI*PI*2;
+const float DIST_PER_ROTATION_Z = 3.6;
 
 // chess pieces
 const int BLACK_PAWN = 0;
@@ -26,26 +38,26 @@ const int WHITE_BISHOP = 9;
 const int WHITE_QUEEN = 10;
 const int WHITE_KING = 11;
 
-// motors (edit these)
+// motors
 const int x_motor1 = mmotor_S3_1;
 const int x_motor2 = mmotor_S3_2;
-const int y_motor = motorA;
-const int z_motor = motorB;
-const int claw_motor = motorC;
+const int y_motor = motorC;
+const int z_motor = motorA;
+const int claw_motor = motorB;
 
 
 /*
  * Moves the robot in the x direction to column x.
+ * 
+ * CINDY
  */
 void move_x(int x)
 {
-	const float DIST_PER_ROTATION = WHEEL_RADI*PI*2;
-
-	if(MSMMotorEncoder(x_motor1)/360.0*DIST_PER_ROTATION < x*TILE_SIDE)
+	if(MSMMotorEncoder(x_motor1)/360.0*DIST_PER_ROTATION_X < x*TILE_SIDE)
 	{
 		MSMMotor(x_motor1, 20);
 		MSMMotor(x_motor2, 20);
-		while(MSMMotorEncoder(x_motor1)/360.0*DIST_PER_ROTATION < x*TILE_SIDE) {}
+		while(MSMMotorEncoder(x_motor1)/360.0*DIST_PER_ROTATION_X < x*TILE_SIDE) {}
 		MSMotorStop(x_motor1);
 		MSMotorStop(x_motor2);
 	}
@@ -53,7 +65,7 @@ void move_x(int x)
 	{
 		MSMMotor(x_motor1, -20);
 		MSMMotor(x_motor2, -20);
-		while(MSMMotorEncoder(x_motor1)/360.0*DIST_PER_ROTATION > x*TILE_SIDE) {}
+		while(MSMMotorEncoder(x_motor1)/360.0*DIST_PER_ROTATION_X > x*TILE_SIDE) {}
 		MSMotorStop(x_motor1);
 		MSMotorStop(x_motor2);
 	}
@@ -62,21 +74,21 @@ void move_x(int x)
 
 /*
  * Moves the robot in the y direction to row y.
+ * 
+ * CINDY
  */
 void move_y(int y)
 {
-	const float DIST_PER_ROTATION = WHEEL_RADI*PI*2;
-
-	if(nMotorEncoder(y_motor)/360.0*DIST_PER_ROTATION < y*TILE_SIDE)
+	if(nMotorEncoder(y_motor)/360.0*DIST_PER_ROTATION_Y < y*TILE_SIDE)
 	{
 		motor[y_motor] = 20;
-		while(nMotorEncoder(y_motor)/360.0*DIST_PER_ROTATION < y*TILE_SIDE) {}
+		while(nMotorEncoder(y_motor)/360.0*DIST_PER_ROTATION_Y < y*TILE_SIDE) {}
 		motor[y_motor] = 0;
 	}
 	else
 	{
 		motor[y_motor] = -40;
-		while(nMotorEncoder(y_motor)/360.0*DIST_PER_ROTATION > y*TILE_SIDE) {}
+		while(nMotorEncoder(y_motor)/360.0*DIST_PER_ROTATION_Y > y*TILE_SIDE) {}
 		motor[y_motor] = 0;
 	}
 	wait1Msec(200);
@@ -84,6 +96,8 @@ void move_y(int y)
 
 /*
  * Moves the robot to the tile (x,y).
+ * 
+ * CINDY
  */
 void moveArm(int x, int y)
 {
@@ -93,6 +107,8 @@ void moveArm(int x, int y)
 
 /*
  * Closes or opens the claw.
+ * 
+ * CINDY
  */
 void closeOpenClaw(int piece)
 {
@@ -116,25 +132,28 @@ void closeOpenClaw(int piece)
 }
 
 /*
- * Raises and lowers the claw.
+ * Lowers the claw.
+ * 
+ * CINDY
  */
-void raiseLowerClaw()
+void lowerClaw()
 {
-	const float Z_GEAR = 1;
-	const float DIST_PER_ROTATION = Z_GEAR*PI*2;
-	const float EXTEND_DIST = 6;
-	//const float CLAWZ_TOL = 0.05;
+	motor[z_motor] = -40;
+	while(nMotorEncoder(z_motor)/360.0*DIST_PER_ROTATION_Z > -EXTEND_DIST_Z) {}
 
-	if(nMotorEncoder(z_motor)/360.0*DIST_PER_ROTATION < -EXTEND_DIST)
-	{
-		motor[z_motor] = 40;
-		while(nMotorEncoder(z_motor)/360.0*DIST_PER_ROTATION < 0) {}
-	}
-	else
-	{
-		motor[z_motor] = -40;
-		while(nMotorEncoder(z_motor)/360.0*DIST_PER_ROTATION > -EXTEND_DIST) {}
-	}
+	motor[z_motor] = 0;
+	wait1Msec(500);
+}
+
+/*
+ * Raises the claw.
+ * 
+ * CINDY
+ */
+void raiseClaw()
+{
+	motor[z_motor] = 40;
+	while(nMotorEncoder(z_motor)/360.0*DIST_PER_ROTATION_Z < 0) {}
 
 	motor[z_motor] = 0;
 	wait1Msec(500);
@@ -142,16 +161,20 @@ void raiseLowerClaw()
 
 /*
  * Moves the chess piece from tile (x_start, y_start) to (x_end, y_end).
+ * 
+ * ALEX
  */
-void movePiece(int x_start, int y_start, int x_end, int y_end)
+void movePiece(int x_start, int y_start, int x_end, int y_end, int piece_type)
 {
 	// TO DO
 }
 
 /*
- * Removes the chess piece at tile (x, y).
+ * Removes the chess piece at tile (x, y) and places it at the correct location.
+ * 
+ * ALEX
  */
-void removePiece(int x, int y)
+void removePiece(int x, int y, int piece_type)
 {
 	// TO DO
 }
@@ -159,6 +182,8 @@ void removePiece(int x, int y)
 /*
  * Checks whether the chess move of the piece at (x_start, y_start) to (x_end, y_end)
  * is valid.
+ * 
+ * AARON
  */
 bool moveIsValid(int x_start, int y_start, int x_end, int y_end, bool white_turn)
 {
@@ -166,8 +191,10 @@ bool moveIsValid(int x_start, int y_start, int x_end, int y_end, bool white_turn
 }
 
 /*
- * Checks whether the player is in check (1) or checkmate (2).
- * Returns 0 otherwise. 
+ * Checks whether the player is in check (1), checkmate (2), or stalemate (3).
+ * Returns 0 otherwise.
+ * 
+ * AARON
  */
 int check(bool white)
 {
@@ -175,7 +202,44 @@ int check(bool white)
 }
 
 /*
+ * Returns the corresponding number to a letter.
+ * A = 0
+ * B = 1
+ * C = 2
+ * D = 3
+ * E = 4
+ * F = 5
+ * G = 6
+ * H = 7
+ * 
+ * CINDY
+ */
+int num(char letter)
+{
+	if (letter == 'A')
+		return 0;
+	else if (letter == 'B')
+		return 1;
+	else if (letter == 'C')
+		return 2;
+	else if (letter == 'D')
+		return 3;
+	else if (letter == 'E')
+		return 4;
+	else if (letter == 'F')
+		return 5;
+	else if (letter == 'G')
+		return 6;
+	else if (letter == 'H')
+		return 7;
+	else
+		return -1;
+}
+
+/*
  * Records the chess move to a file.
+ * 
+ * HANK
  */
 void recordMove(int x_start, int y_start, int x_end, int y_end)
 {
@@ -184,6 +248,8 @@ void recordMove(int x_start, int y_start, int x_end, int y_end)
 
 /*
  * Idk how this function works...
+ * 
+ * HANK
  */
 void readMoves()
 {
@@ -192,6 +258,8 @@ void readMoves()
 
 /*
  * Idk how this function works...
+ * 
+ * HANK
  */
 void gameList()
 {
@@ -200,6 +268,8 @@ void gameList()
 
 /*
  * Idk how this function works...
+ * 
+ * HANK
  */
 void addGame()
 {
@@ -208,6 +278,8 @@ void addGame()
 
 /*
  * Executes player vs player mode.
+ * 
+ * AARON
  */
 void playerVsPlayer()
 {
@@ -216,6 +288,8 @@ void playerVsPlayer()
 
 /*
  * Executes player vs AI mode.
+ * 
+ * HANK
  */
 void playerVsAI()
 {
@@ -224,16 +298,30 @@ void playerVsAI()
 
 /*
  * Executes replay saved match mode.
+ * 
+ * AARON
  */
 void replaySavedMatch()
 {
 	// TO DO
 }
 
-// main
+
+// currently for testing purposes
 task main()
 {
 	// initialize motor multiplexer
 	SensorType[S3] = sensorI2CCustom;
 	MSMMUXinit();
+
+	wait1Msec(50);
+
+	// reset motor encoders
+	nMotorEncoder(z_motor) = 0;
+
+	// testing
+	lowerClaw();
+	wait1Msec(200);
+	raiseClaw();
+	wait1Msec(200);
 }
