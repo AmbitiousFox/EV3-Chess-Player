@@ -1,5 +1,8 @@
 #include "mindsensors-motormux.h"
 
+//REMEMBER: we need to cite our open source code, but since it is used for
+//giving files, we probably dont need to submit open source code, ask carol
+
 /*
  * CHESS BOARD LAYOUT
  *
@@ -207,12 +210,21 @@ void raiseClaw()
 
 /*
  * Moves the chess piece from tile (x_start, y_start) to (x_end, y_end).
- *
+ *        Claw expects to be open at the start, and remain open at the end.
  * ALEX
  */
 void movePiece(int x_start, int y_start, int x_end, int y_end, int piece_type)
 {
-	// TO DO
+	calibrate_y()
+	calibrate_x()
+	moveArm(int x_start, int y_start)
+	lowerClaw() // might need piece_type in the future
+	closeClaw() //same
+	raiseClaw() //same
+	moveArm(int x_end, int y_end)
+	lowerClaw() // might need piece_type in the future
+	openClaw() //same
+	raiseClaw() //same
 }
 
 /*
