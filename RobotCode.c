@@ -1,5 +1,8 @@
 #include "mindsensors-motormux.h"
 
+//REMEMBER: we need to cite our open source code, but since it is used for
+//giving files, we probably dont need to submit open source code, ask carol
+
 /*
  * CHESS BOARD LAYOUT
  *
@@ -21,6 +24,8 @@
  * 		0	1	2	3	4	5	6	7	8	9	10	11	12	13	14	15
  * 					  a b c d e f  g   h
  */
+ 
+// it is declared that an empty spot on the chess board is represented by null values
 
 // chess piece type
 struct piece
@@ -30,12 +35,8 @@ struct piece
 	bool colour; // true = white, false = black
 };
 
-// chess board
-piece chess_board[8][8];
-
-// extra / captured pieces
-piece white_extra_pieces[3][8];
-piece black_extra_pieces[3][8];
+//combined chess board and extra / capture pieces array that matches with coordinate system
+piece board[16][8];
 
 // physical system constants
 const float WHEEL_RADIUS_X = 3.7;
@@ -221,12 +222,28 @@ void raiseClaw()
 
 /*
  * Moves the chess piece from tile (x_start, y_start) to (x_end, y_end).
- *
+ *        Claw expects to be open at the start, and remain open at the end.
  * ALEX
- */
-void movePiece(int x_start, int y_start, int x_end, int y_end, int piece_type)
+ */ // it is decreed that white pieces are on the right side.
+void movePiece(int x_start, int y_start, int x_end, int y_end, piece & currPiece)
 {
-	// TO DO
+	calibrate_y();
+	calibrate_x();
+	moveArm(int x_start, int y_start);
+	lowerClaw(); // might need piece_type in the future
+	closeClaw(); //same
+	raiseClaw(); //same
+	moveArm(int x_end, int y_end);
+	lowerClaw(); // might need piece_type in the future
+	openClaw(); //same
+	raiseClaw(); //same
+	board[x_end][y_end] = currPiece;
+	removeFromArray(x_start, y_start);
+}
+
+void removeFromArray(int x, int y)
+{
+	board[x][y] = null;
 }
 
 /*
@@ -234,9 +251,56 @@ void movePiece(int x_start, int y_start, int x_end, int y_end, int piece_type)
  *
  * ALEX
  */
-void removePiece(int x, int y, int piece_type)
+void removePiece(int x, int y, piece & currPiece)
 {
-	// TO DO
+	int endx = 0, endy = 0; // endpoint of piece
+	
+	if(currPiece.colour)// find if piece is white
+	{
+		//search columns 13-15
+		holdingSpot(currPiece, endx, endy, 13, 14, 15)
+	}
+	else
+	{
+		//search columns 0-2
+		holdingSpot(currPiece, endx, endy, 2, 1, 0)	
+	}
+	movePiece(x, y, endx, endy, currPiece)
+}
+//subfunction of removePiece()
+void holdingSpot(piece & currPiece, int & x, int & y,
+ int pawnColumn, int pieceColumn, int queenColumn)
+{// look through the array of it's type, find the last available location for it
+	if(currPiece.piece_type = PAWN) 
+		for (int row = 0; row <= 7, row++)// search pawnColumn
+		{
+			if(board[pawnColumn][row] == null)
+				x = pawnColumn, y = row;
+		}
+	else if(currPiece.piece_type = ROOK)
+		if(board[pieceColumn][0] == null)
+			x = pieceColumn, y = 0;
+		if(board[pieceColumn][7] == null)
+			x = pieceColumn, y = 7;
+	else if(currPiece.piece_type = KNIGHT)
+		if(board[pieceColumn][1] == null)
+			x = pieceColumn, y = 1;
+		if(board[pieceColumn][6] == null)
+			x = pieceColumn, y = 6;
+	else if(currPiece.piece_type = BISHOP)
+		if(board[pieceColumn][2] == null)
+			x = pieceColumn, y = 2;
+		if(board[pieceColumn][5] == null)
+			x = pieceColumn, y = 5;
+	else if(currPiece.piece_type = QUEEN)
+		if(board[pieceColumn][3] == null)
+			x = pieceColumn, y = 3;
+		for (int row = 0; row <= 7, row++)  // search queenColumn
+		{
+			if(board[queenColumn][row] == null)
+				x = queenColumn, y = row;
+		}
+	// movePiece(location)
 }
 
 /*
