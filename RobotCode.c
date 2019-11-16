@@ -300,6 +300,7 @@ void setBoard()
 
 void resetBoard()
 {
+	
 }
 
 void displaySelection() 
@@ -338,6 +339,8 @@ void squareSelect(int & x_value, int & y_value)
 				x_value = (x_value-1+8)%8;
 		}
 	}
+	displayString(5, "");
+	displayString(7, "");
 }
 
 void makeMove(int team)
