@@ -128,7 +128,7 @@ void move_x(int x, int offset)
  */
 void move_y(int y)
 {
-	if(nMotorEncoder(y_motor)/360.0*DIST_PER_ROTATION_Y > -y*TILE_SIDE - 0.7)
+	if(nMotorEncoder(y_motor)/360.0*DIST_PER_ROTATION_Y > -y*TILE_SIDE - 1.2)
 	{
 		motor[y_motor] = -MOTOR_Y_SPEED;
 		while(nMotorEncoder(y_motor)/360.0*DIST_PER_ROTATION_Y > -y*TILE_SIDE - 0.7) {}
