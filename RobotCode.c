@@ -1,102 +1,169 @@
 #include "mindsensors-motormux.h"
 
+//REMEMBER: we need to cite our open source code, but since it is used for
+//giving files, we probably dont need to submit open source code, ask carol
+
+/*
+ * CHESS BOARD LAYOUT
+ *
+ * 	The chess board follows a predetermined coordinate system:
+ *
+ *  x = extra piece tile
+ *  + = chess board tile
+ *
+ *
+ * 	7	x	x	x		+	+	+	+	+	+	 +	 +	 		 x	 x	 x
+ * 	6	x	x	x		+	+	+	+	+	+	 +	 +	 		 x	 x	 x
+ * 	5	x	x	x		+	+	+	+	+	+	 +	 +	 		 x	 x	 x
+ * 	4	x	x	x		+	+	+	+	+	+	 +	 +	 		 x	 x	 x
+ * 	3	x	x	x		+	+	+	+	+	+	 +	 +	 		 x	 x	 x
+ * 	2	x	x	x		+	+	+	+	+	+	 +	 +	 		 x	 x	 x
+ * 	1	x	x	x		+	+	+	+	+	+	 +	 +	 		 x	 x	 x
+ * 	0	x	x	x		+	+	+	+	+	+	 + 	 +	 		 x	 x	 x
+ *
+ * 		0	1	2	3	4	5	6	7	8	9	10	11	12	13	14	15
+ * 					  a b c d e f  g   h
+ */
+
+// it is declared that an empty spot on the chess board is represented by null values
 
 // chess piece type
 struct piece
 {
 	int piece_type;
 	float extend_dist;
+	float close_dist;
 	bool colour; // true = white, false = black
 };
 
-// chess board
-piece chess_board[8][8];
-
-// extra / captured pieces
-piece white_extra_pieces[3][8];
-piece black_extra_pieces[3][8];
+//combined chess board and extra / capture pieces array that matches with coordinate system
+piece board[16][8];
 
 // physical system constants
-const float WHEEL_RADI = 2.00;
+const float WHEEL_RADIUS_X = 3.7;
+const float WHEEL_RADIUS_Y = 1.8;
 const float TILE_SIDE = 3;
-const float EXTEND_DIST_Z = 5.2;
-const float DIST_PER_ROTATION_X = WHEEL_RADI*PI*2;
-const float DIST_PER_ROTATION_Y = WHEEL_RADI*PI*2;
+const float EXTEND_DIST_Z = 5.3;
+const float EXTEND_DIST_CLAW = 2.3;
+const float DIST_PER_ROTATION_X = WHEEL_RADIUS_X*PI*2/5;
+const float DIST_PER_ROTATION_Y = WHEEL_RADIUS_Y*PI*2;
 const float DIST_PER_ROTATION_Z = 3.6;
+const float DIST_PER_ROTATION_CLAW = 0.5;
+
+const float MOTOR_X_SPEED = 40;
+const float MOTOR_Y_SPEED = 60;
+
+const float PAWN_EXTEND_DIST = EXTEND_DIST_Z;
+const float PAWN_CLOSE_DIST = 0;
+const float ROOK_EXTEND_DIST = EXTEND_DIST_Z;
+const float ROOK_CLOSE_DIST = 1.5;
+const float KNIGHT_EXTEND_DIST = EXTEND_DIST_Z;
+const float KNIGHT_CLOSE_DIST = 0.1;
+const float BISHOP_EXTEND_DIST = EXTEND_DIST_Z;
+const float BISHOP_CLOSE_DIST = 1.2;
+const float QUEEN_EXTEND_DIST = EXTEND_DIST_Z - 1;
+const float QUEEN_CLOSE_DIST = 1;
+const float KING_EXTEND_DIST = EXTEND_DIST_Z - 1;
+const float KING_CLOSE_DIST = 1.5;
 
 // chess pieces
-const int BLACK_PAWN = 0;
-const int BLACK_ROOK = 1;
-const int BLACK_KNIGHT = 2;
-const int BLACK_BISHOP = 3;
-const int BLACK_QUEEN = 4;
-const int BLACK_KING = 5;
-const int WHITE_PAWN = 6;
-const int WHITE_ROOK = 7;
-const int WHITE_KNIGHT = 8;
-const int WHITE_BISHOP = 9;
-const int WHITE_QUEEN = 10;
-const int WHITE_KING = 11;
+const int PAWN = 0;
+const int ROOK = 1;
+const int KNIGHT = 2;
+const int BISHOP = 3;
+const int QUEEN = 4;
+const int KING = 5;
+const int NULL_PIECE = 6;
 
 // motors
-const int x_motor1 = mmotor_S3_1;
-const int x_motor2 = mmotor_S3_2;
+const int x_motor1 = mmotor_S1_1;
+const int x_motor2 = mmotor_S1_2;
 const int y_motor = motorC;
 const int z_motor = motorA;
-const int claw_motor = motorB;
+const int claw_motor = motorD;
+const int touch_x = S2;
+const int touch_y = S3;
 
 
 /*
  * Moves the robot in the x direction to column x.
- * 
+ *
  * CINDY
  */
 void move_x(int x)
 {
-	if(MSMMotorEncoder(x_motor1)/360.0*DIST_PER_ROTATION_X < x*TILE_SIDE)
+	if(MSMMotorEncoder(x_motor1)/360.0*DIST_PER_ROTATION_X < x*TILE_SIDE + 1)
 	{
-		MSMMotor(x_motor1, 20);
-		MSMMotor(x_motor2, 20);
-		while(MSMMotorEncoder(x_motor1)/360.0*DIST_PER_ROTATION_X < x*TILE_SIDE) {}
-		MSMotorStop(x_motor1);
-		MSMotorStop(x_motor2);
+		MSMMotor(x_motor1, MOTOR_X_SPEED);
+		MSMMotor(x_motor2, MOTOR_X_SPEED);
+		while(MSMMotorEncoder(x_motor1)/360.0*DIST_PER_ROTATION_X < x*TILE_SIDE + 1) {}
 	}
 	else
 	{
-		MSMMotor(x_motor1, -20);
-		MSMMotor(x_motor2, -20);
-		while(MSMMotorEncoder(x_motor1)/360.0*DIST_PER_ROTATION_X > x*TILE_SIDE) {}
-		MSMotorStop(x_motor1);
-		MSMotorStop(x_motor2);
+		MSMMotor(x_motor1, -MOTOR_X_SPEED);
+		MSMMotor(x_motor2, -MOTOR_X_SPEED);
+		while(MSMMotorEncoder(x_motor1)/360.0*DIST_PER_ROTATION_X > x*TILE_SIDE + 1) {}
 	}
+	MSMotorStop(x_motor1);
+	MSMotorStop(x_motor2);
 	wait1Msec(200);
 }
 
 /*
  * Moves the robot in the y direction to row y.
- * 
+ *
  * CINDY
  */
 void move_y(int y)
 {
-	if(nMotorEncoder(y_motor)/360.0*DIST_PER_ROTATION_Y < y*TILE_SIDE)
+	if(nMotorEncoder(y_motor)/360.0*DIST_PER_ROTATION_Y > -y*TILE_SIDE - 1.2)
 	{
-		motor[y_motor] = 20;
-		while(nMotorEncoder(y_motor)/360.0*DIST_PER_ROTATION_Y < y*TILE_SIDE) {}
-		motor[y_motor] = 0;
+		motor[y_motor] = -MOTOR_Y_SPEED;
+		while(nMotorEncoder(y_motor)/360.0*DIST_PER_ROTATION_Y > -y*TILE_SIDE - 1.2) {}
 	}
 	else
 	{
-		motor[y_motor] = -40;
-		while(nMotorEncoder(y_motor)/360.0*DIST_PER_ROTATION_Y > y*TILE_SIDE) {}
-		motor[y_motor] = 0;
+		motor[y_motor] = MOTOR_Y_SPEED;
+		while(nMotorEncoder(y_motor)/360.0*DIST_PER_ROTATION_Y < -y*TILE_SIDE - 1.2) {}
 	}
+	motor[y_motor] = 0;
+	wait1Msec(200);
+}
+
+/*
+ * Calibrates the x direction movement.
+ *
+ * CINDY
+ */
+void calibrate_x()
+{
+	MSMMotor(x_motor1, -MOTOR_X_SPEED);
+	MSMMotor(x_motor2, -MOTOR_X_SPEED);
+	while (SensorValue[touch_x] == 0) {}
+	MSMotorStop(x_motor1);
+	MSMotorStop(x_motor2);
+	MSMMotorEncoderReset(x_motor1);
+	MSMMotorEncoderReset(x_motor2);
+	wait1Msec(200);
+}
+
+/*
+ * Calibrates the y direction movement.
+ *
+ * CINDY
+ */
+void calibrate_y()
+{
+	motor[y_motor] = MOTOR_Y_SPEED;
+	while (SensorValue[touch_y] == 0) {}
+	motor[y_motor] = 0;
+	nMotorEncoder(y_motor) = 0;
 	wait1Msec(200);
 }
 
 /*
  * Moves the robot to the tile (x,y).
- * 
+ *
  * CINDY
  */
 void moveArm(int x, int y)
@@ -106,48 +173,47 @@ void moveArm(int x, int y)
 }
 
 /*
- * Closes or opens the claw.
- * 
+ * Closes the claw.
+ *
  * CINDY
  */
-void closeOpenClaw(int piece)
+void closeClaw(int dist)
 {
-	const float CLAW_GEAR = 1;
-	const float DIST_PER_ROTATION = CLAW_GEAR*PI*2;
-	const float EXTEND_DIST = 30;
-	//const double CLAW_TOL = 0.05;
-
-	if(nMotorEncoder(claw_motor)/360.0*DIST_PER_ROTATION < EXTEND_DIST)
-	{
-		motor[claw_motor] = 100;
-		while(nMotorEncoder(claw_motor)/360.0*DIST_PER_ROTATION < EXTEND_DIST) {}
-	}
-	else
-	{
-		motor[claw_motor] = -100;
-		while(nMotorEncoder(claw_motor)/360.0*DIST_PER_ROTATION > 0) {}
-	}
+	motor[claw_motor] = -100;
+	while(nMotorEncoder(claw_motor)/360.0*DIST_PER_ROTATION_CLAW > dist) {}
 	motor[claw_motor] = 0;
-	wait1Msec(1000);
+	wait1Msec(200);
+}
+
+/*
+ * Opens the claw.
+ *
+ * CINDY
+ */
+void openClaw()
+{
+	motor[claw_motor] = 100;
+	while(nMotorEncoder(claw_motor)/360.0*DIST_PER_ROTATION_CLAW < EXTEND_DIST_CLAW) {}
+	motor[claw_motor] = 0;
+	wait1Msec(200);
 }
 
 /*
  * Lowers the claw.
- * 
+ *
  * CINDY
  */
-void lowerClaw()
+void lowerClaw(int dist)
 {
 	motor[z_motor] = -40;
-	while(nMotorEncoder(z_motor)/360.0*DIST_PER_ROTATION_Z > -EXTEND_DIST_Z) {}
-
+	while(nMotorEncoder(z_motor)/360.0*DIST_PER_ROTATION_Z > -dist) {}
 	motor[z_motor] = 0;
-	wait1Msec(500);
+	wait1Msec(200);
 }
 
 /*
  * Raises the claw.
- * 
+ *
  * CINDY
  */
 void raiseClaw()
@@ -156,27 +222,138 @@ void raiseClaw()
 	while(nMotorEncoder(z_motor)/360.0*DIST_PER_ROTATION_Z < 0) {}
 
 	motor[z_motor] = 0;
-	wait1Msec(500);
+	wait1Msec(200);
+}
+
+/*
+ * Removes a piece from the chess board array.
+ *
+ * ALEX
+ */
+void removeFromArray(int x, int y)
+{
+	piece null_piece;
+	null_piece.piece_type = NULL_PIECE;
+	board[x][y] = null_piece;
 }
 
 /*
  * Moves the chess piece from tile (x_start, y_start) to (x_end, y_end).
- * 
+ *        Claw expects to be open at the start, and remain open at the end.
  * ALEX
- */
-void movePiece(int x_start, int y_start, int x_end, int y_end, int piece_type)
+ */ // it is decreed that white pieces are on the right side.
+void movePiece(int x_start, int y_start, int x_end, int y_end, piece & currPiece)
 {
-	// TO DO
+	calibrate_x();
+	calibrate_y();
+	moveArm(x_start, y_start);
+	lowerClaw(currPiece.extend_dist);
+	closeClaw(currPiece.close_dist);
+	raiseClaw();
+	moveArm(x_end, y_end);
+	lowerClaw(currPiece.extend_dist);
+	openClaw();
+	raiseClaw();
+	board[x_end][y_end] = currPiece;
+	removeFromArray(x_start, y_start);
+}
+
+//subfunction of removePiece()
+void holdingSpot(piece & currPiece, int & x, int & y,
+ 	int pawnColumn, int pieceColumn, int queenColumn)
+{
+	// look through the array of it's type, find the last available location for it
+	if(currPiece.piece_type == PAWN)
+	{
+		for (int row = 0; row <= 7; row++)// search pawnColumn
+		{
+			if(board[pawnColumn][row].piece_type == NULL_PIECE)
+			{
+				x = pawnColumn;
+				y = row;
+			}
+		}
+	}
+	else if(currPiece.piece_type == ROOK)
+	{
+		if(board[pieceColumn][0].piece_type == NULL_PIECE)
+		{
+			x = pieceColumn;
+			y = 0;
+		}
+		else
+		{
+			x = pieceColumn;
+			y = 7;
+		}
+	}
+	else if(currPiece.piece_type == KNIGHT)
+	{
+		if(board[pieceColumn][1].piece_type == NULL_PIECE)
+		{
+			x = pieceColumn;
+			y = 1;
+		}
+		else
+		{
+			x = pieceColumn;
+			y = 6;
+		}
+	}
+	else if(currPiece.piece_type == BISHOP)
+	{
+		if(board[pieceColumn][2].piece_type == NULL_PIECE)
+		{
+			x = pieceColumn;
+			y = 2;
+		}
+		else
+		{
+			x = pieceColumn;
+			y = 5;
+		}
+	}
+	else if(currPiece.piece_type == QUEEN)
+	{
+		if(board[pieceColumn][3].piece_type == NULL_PIECE)
+		{
+			x = pieceColumn;
+			y = 3;
+		}
+		else
+		{
+			for (int row = 0; row <= 7; row++)  // search queenColumn
+			{
+				if(board[queenColumn][row].piece_type == NULL_PIECE)
+				{
+					x = queenColumn;
+					y = row;
+				}
+			}
+		}
+	}
 }
 
 /*
  * Removes the chess piece at tile (x, y) and places it at the correct location.
- * 
+ *
  * ALEX
  */
-void removePiece(int x, int y, int piece_type)
+void removePiece(int x, int y, piece & currPiece)
 {
-	// TO DO
+	int endx = 0, endy = 0; // endpoint of piece
+
+	if(currPiece.colour)// find if piece is white
+	{
+		//search columns 13-15
+		holdingSpot(currPiece, endx, endy, 13, 14, 15)
+	}
+	else
+	{
+		//search columns 0-2
+		holdingSpot(currPiece, endx, endy, 2, 1, 0)
+	}
+	movePiece(x, y, endx, endy, currPiece)
 }
 
 void invalidInputMessage()
@@ -191,7 +368,7 @@ void invalidInputMessage()
 /*
  * Checks whether the chess move of the piece at (x_start, y_start) to (x_end, y_end)
  * is valid.
- * 
+ *
  * AARON
  */
 bool isMoveValid(int x_start, int y_start, int x_end, int y_end, bool white_turn)
@@ -203,8 +380,7 @@ bool isMoveValid(int x_start, int y_start, int x_end, int y_end, bool white_turn
  * Checks whether the player is in check (1), checkmate (2), or stalemate (3).
  * Returns 0 otherwise.
  *
- * Params: teams 
- * 
+ * Params: teams  
  * AARON
  */
 int check(int team)
@@ -222,7 +398,7 @@ int check(int team)
  * F = 5
  * G = 6
  * H = 7
- * 
+ *
  * CINDY
  */
 int num(char letter)
@@ -249,7 +425,7 @@ int num(char letter)
 
 /*
  * Records the chess move to a file.
- * 
+ *
  * HANK
  */
 void recordMove(int x_start, int y_start, int x_end, int y_end)
@@ -259,7 +435,7 @@ void recordMove(int x_start, int y_start, int x_end, int y_end)
 
 /*
  * Idk how this function works...
- * 
+ *
  * HANK
  */
 void readMoves()
@@ -269,7 +445,7 @@ void readMoves()
 
 /*
  * Idk how this function works...
- * 
+ *
  * HANK
  */
 void gameList()
@@ -279,7 +455,7 @@ void gameList()
 
 /*
  * Idk how this function works...
- * 
+ *
  * HANK
  */
 void addGame()
@@ -391,7 +567,7 @@ void clearDisplay()
 
 /*
  * Executes player vs player mode.
- * 
+ *
  * AARON
  */
 void playerVsPlayer()
@@ -412,7 +588,7 @@ void playerVsPlayer()
 
 /*
  * Executes player vs AI mode.
- * 
+ *
  * HANK
  */
 void playerVsAI()
@@ -422,7 +598,7 @@ void playerVsAI()
 
 /*
  * Executes replay saved match mode.
- * 
+ *
  * AARON
  */
 void replaySavedMatch()
@@ -434,19 +610,26 @@ void replaySavedMatch()
 // currently for testing purposes
 task main()
 {
-	
 	// initialize motor multiplexer
 	SensorType[S3] = sensorI2CCustom;
 	MSMMUXinit();
+	SensorType[touch_x] = sensorEV3_Touch;
+	SensorType[touch_y] = sensorEV3_Touch;
 
 	wait1Msec(50);
 
 	// reset motor encoders
 	nMotorEncoder(z_motor) = 0;
+	nMotorEncoder(claw_motor) = 0;
 
 	// testing
-	lowerClaw();
-	wait1Msec(200);
-	raiseClaw();
-	wait1Msec(200);
+	piece knight;
+	knight.piece_type = KNIGHT;
+	knight.extend_dist = KNIGHT_EXTEND_DIST;
+	knight.close_dist = KNIGHT_CLOSE_DIST;
+	knight.colour = false;
+
+	openClaw();
+	movePiece(10, 7, 9, 5, knight);
+	closeClaw(0);
 }
