@@ -1,4 +1,5 @@
 #include "mindsensors-motormux.h"
+#include "PC_FileIO.c"
 
 //REMEMBER: we need to cite our open source code, but since it is used for
 //giving files, we probably dont need to submit open source code, ask carol
@@ -26,6 +27,10 @@
  */
 
 // it is declared that an empty spot on the chess board is represented by null values
+
+// files
+string INPUT_FILE = "saved_match.txt";
+string OUTPUT_FILE = "saved_match.txt";
 
 // chess piece type
 struct piece
@@ -360,14 +365,14 @@ void removePiece(int x, int y, piece & currPiece)
 	if(currPiece.colour)// find if piece is white
 	{
 		//search columns 13-15
-		holdingSpot(currPiece, endx, endy, 13, 14, 15)
+		holdingSpot(currPiece, endx, endy, 13, 14, 15);
 	}
 	else
 	{
 		//search columns 0-2
-		holdingSpot(currPiece, endx, endy, 2, 1, 0)
+		holdingSpot(currPiece, endx, endy, 2, 1, 0);
 	}
-	movePiece(x, y, endx, endy, currPiece)
+	movePiece(x, y, endx, endy, currPiece);
 }
 
 /*
@@ -384,18 +389,18 @@ bool moveIsValid(int x_start, int y_start, int x_end, int y_end, bool white_turn
 
 /*
  * Checks whether the player is in check.
- * 
+ *
  * CINDY
  */
-bool check(bool player, piece & board_state[8][8])
+bool check(bool player)
 {
 	// find location of player's king
 	int x_king = 0, y_king = 0;
-	for (int x = 0; x < 8; x++)
+	for (int x = 4; x <= 11; x++)
 	{
 		for (int y = 0; y < 8; y++)
 		{
-			if (board_state[x][y].piece_type == KING && board_state[x][y].colour == player)
+			if (board[x][y].piece_type == KING && board[x][y].colour == player)
 			{
 				x_king = x;
 				y_king = y;
@@ -404,51 +409,53 @@ bool check(bool player, piece & board_state[8][8])
 	}
 
 	// for each of opponent's pieces, check if that piece can capture the king
-	for (int x = 0; x < 8; x++)
+	for (int x = 4; x <= 11; x++)
 		for (int y = 0; y < 8; y++)
-			if (board_state[x][y].colour != player && moveIsValid(x, y, x_king, y_king, player))
+			if (board[x][y].colour != player && moveIsValid(x, y, x_king, y_king, player))
 				return true;
-	
+
 	return false;
 }
 
 /*
  * Helper function for checkmate algorithm.
- * 
+ *
  * CINDY
  */
-bool movePieceAndCheck(piece & board_state[8][8], int x_start, int y_start, int x_end, int y_end, bool player)
+bool movePieceAndCheck(int x_start, int y_start, int x_end, int y_end, bool player)
 {
-	piece temp = board_state[x_end][y_end];
+	piece temp;
+	temp = board[x_end][y_end];
 	piece null_piece;
 	null_piece.piece_type = NULL;
 
-	curr_board[x_end][y_end] = board_state[x_start][y_start];
-	curr_board[x_start][y_start] = null_piece;
+	board[x_end][y_end] = board[x_start][y_start];
+	board[x_start][y_start] = null_piece;
 
-	if (!check(player, board_state))
+	if (!check(player))
 		return false;
-	
-	curr_board[x_start][y_start] = curr_board[x_end][y_end];
-	curr_board[x_end][y_end] = temp;
-	
+
+	board[x_start][y_start] = board[x_end][y_end];
+	board[x_end][y_end] = temp;
+
 	return true;
 }
 
 /*
  * Helper function for checkmate algorithm. (BRUTE FORCE ALGORITHM)
- * 
+ *
  * CINDY
  */
-bool canRelieveCheck(piece & curr_board, bool player)
+bool canRelieveCheck(bool player)
 {
-	// for every possible move the player can make, check if it 
+	// for every possible move the player can make, check if it
 	// results in check
-	for (int x = 0; x < 8; x++)
+	for (int x = 4; x <= 11; x++)
 	{
 		for (int y = 0; y < 8; y++)
 		{
-			piece curr_piece = curr_board[x][y];
+			piece curr_piece;
+			curr_piece = board[x][y];
 
 			if (curr_piece.colour == player)
 			{
@@ -462,18 +469,18 @@ bool canRelieveCheck(piece & curr_board, bool player)
 						for (int y_end = y+1; y_end <= y+2; y_end++)
 						{
 							if (moveIsValid(x, y, x, y_end, player))
-								if (!movePieceAndCheck(curr_board, x, y, x, y_end, player))
+								if (!movePieceAndCheck(x, y, x, y_end, player))
 									return true;
 							else
 								break;
 						}
 
 						// capture
-						if (x > 0 && moveIsValid(x, y, x-1, y+1, player))
-							if (!movePieceAndCheck(curr_board, x, y, x-1, y+1, player))
+						if (x > 4 && moveIsValid(x, y, x-1, y+1, player))
+							if (!movePieceAndCheck(x, y, x-1, y+1, player))
 									return true;
-						if (x < 7 && moveIsValid(x, y, x+1, y+1, player))
-							if (!movePieceAndCheck(curr_board, x, y, x+1, y+1, player))
+						if (x < 11 && moveIsValid(x, y, x+1, y+1, player))
+							if (!movePieceAndCheck(x, y, x+1, y+1, player))
 									return true;
 					}
 
@@ -484,47 +491,47 @@ bool canRelieveCheck(piece & curr_board, bool player)
 						for (int y_end = y-1; y_end >= y-2; y_end--)
 						{
 							if (moveIsValid(x, y, x, y_end, player))
-								if (!movePieceAndCheck(curr_board, x, y, x, y_end, player))
+								if (!movePieceAndCheck(x, y, x, y_end, player))
 									return true;
 							else
 								break;
 						}
 
 						// capture
-						if (x > 0 && moveIsValid(x, y, x-1, y-1, player))
-							if (!movePieceAndCheck(curr_board, x, y, x-1, y-1, player))
+						if (x > 4 && moveIsValid(x, y, x-1, y-1, player))
+							if (!movePieceAndCheck(x, y, x-1, y-1, player))
 									return true;
-						if (x < 7 && moveIsValid(x, y, x+1, y-1, player))
-							if (!movePieceAndCheck(curr_board, x, y, x+1, y-1, player))
+						if (x < 11 && moveIsValid(x, y, x+1, y-1, player))
+							if (!movePieceAndCheck(x, y, x+1, y-1, player))
 									return true;
 					}
 				}
-				
+
 				// ROOK OR QUEEN
 				else if (curr_piece.piece_type == ROOK || curr_piece.piece_type == QUEEN)
 				{
 					// right
-					for (int x_end = x+1; x_end < 8; x_end++)
+					for (int x_end = x+1; x_end < 12; x_end++)
 						if (moveIsValid(x, y, x_end, y, player))
-							if (!movePieceAndCheck(curr_board, x, y, x_end, player))
+							if (!movePieceAndCheck(x, y, x_end, y, player))
 								return true;
-					
+
 					// left
-					for (int x_end = x-1; x_end >= 0; x_end--)
+					for (int x_end = x-1; x_end >= 4; x_end--)
 						if (moveIsValid(x, y, x_end, y, player))
-							if (!movePieceAndCheck(curr_board, x, y, x_end, y, player))
+							if (!movePieceAndCheck(x, y, x_end, y, player))
 								return true;
-					
+
 					// up
-					for (int y_end = y+1; y_end < 8; y_end++)
+					for (int y_end = y+1; y_end < 12; y_end++)
 						if (moveIsValid(x, y, x, y_end, player))
-							if (!movePieceAndCheck(curr_board, x, y, x, y_end, player))
+							if (!movePieceAndCheck(x, y, x, y_end, player))
 								return true;
 
 					// down
-					for (int y_end = y-1; y_end >= 0; y_end--)
+					for (int y_end = y-1; y_end >= 4; y_end--)
 						if (moveIsValid(x, y, x, y_end, player))
-							if (!movePieceAndCheck(curr_board, x, y, x, y_end, player))
+							if (!movePieceAndCheck(x, y, x, y_end, player))
 								return true;
 				}
 
@@ -532,35 +539,35 @@ bool canRelieveCheck(piece & curr_board, bool player)
 				else if (curr_piece.piece_type == KNIGHT)
 				{
 					// right one
-					if (x < 7 && && y < 6 && moveIsValid(x, y, x+1, y+2, player))
-						if (!movePieceAndCheck(curr_board, x, y, x+1, y+2, player))
+					if (x < 11 && y < 6 && moveIsValid(x, y, x+1, y+2, player))
+						if (!movePieceAndCheck(x, y, x+1, y+2, player))
 							return true;
-					if (x < 7 && y > 1 && moveIsValid(x, y, x+1, y-2, player))
-						if (!movePieceAndCheck(curr_board, x, y, x+1, y-2, player))
+					if (x < 11 && y > 1 && moveIsValid(x, y, x+1, y-2, player))
+						if (!movePieceAndCheck(x, y, x+1, y-2, player))
 							return true;
 
 					// left one
-					if (x > 0 && && y < 6 && moveIsValid(x, y, x-1, y+2, player))
-						if (!movePieceAndCheck(curr_board, x, y, x-1, y+2, player))
+					if (x > 4 && y < 6 && moveIsValid(x, y, x-1, y+2, player))
+						if (!movePieceAndCheck(x, y, x-1, y+2, player))
 							return true;
-					if (x > 0 && y > 1 && moveIsValid(x, y, x-1, y-2, player))
-						if (!movePieceAndCheck(curr_board, x, y, x-1, y-2, player))
-							return true; 
+					if (x > 4 && y > 1 && moveIsValid(x, y, x-1, y-2, player))
+						if (!movePieceAndCheck(x, y, x-1, y-2, player))
+							return true;
 
 					// right two
-					if (x < 6 && && y < 7 && moveIsValid(x, y, x+2, y+1, player))
-						if (!movePieceAndCheck(curr_board, x, y, x+2, y+1, player))
+					if (x < 10 && y < 7 && moveIsValid(x, y, x+2, y+1, player))
+						if (!movePieceAndCheck(x, y, x+2, y+1, player))
 							return true;
-					if (x < 6 && y > 0 && moveIsValid(x, y, x+2, y-1, player))
-						if (!movePieceAndCheck(curr_board, x, y, x+2, y-1, player))
+					if (x < 10 && y > 0 && moveIsValid(x, y, x+2, y-1, player))
+						if (!movePieceAndCheck(x, y, x+2, y-1, player))
 							return true;
-					
+
 					// left two
-					if (x > 1 && && y < 7 && moveIsValid(x, y, x-2, y+1, player))
-						if (!movePieceAndCheck(curr_board, x, y, x-2, y+1, player))
+					if (x > 5 && y < 7 && moveIsValid(x, y, x-2, y+1, player))
+						if (!movePieceAndCheck(x, y, x-2, y+1, player))
 							return true;
-					if (x > 1 && y > 0 && moveIsValid(x, y, x-2, y-1, player))
-						if (!movePieceAndCheck(curr_board, x, y, x-2, y-1, player))
+					if (x > 5 && y > 0 && moveIsValid(x, y, x-2, y-1, player))
+						if (!movePieceAndCheck(x, y, x-2, y-1, player))
 							return true;
 				}
 
@@ -570,25 +577,25 @@ bool canRelieveCheck(piece & curr_board, bool player)
 					for (int increment = 0; increment < 8; increment++)
 					{
 						// right
-						if (x+increment < 8)
+						if (x+increment < 12)
 						{
-							if (y+increment < 8 && moveIsValid(x, y, x+increment, y+increment))
-								if (!movePieceAndCheck(curr_board, x, y, x+increment, y+increment, player))
+							if (y+increment < 8 && moveIsValid(x, y, x+increment, y+increment, player))
+								if (!movePieceAndCheck(x, y, x+increment, y+increment, player))
 									return true;
-							
+
 							if (y-increment >= 0 && moveIsValid(x, y, x+increment, y-increment, player))
-								if (!movePieceAndCheck(curr_board, x, y, x+increment, y-increment, player))
+								if (!movePieceAndCheck(x, y, x+increment, y-increment, player))
 									return true;
 						}
 						// left
 						if (x-increment >= 0)
 						{
-							if (y+increment < 8 && moveIsValid(x, y, x-increment, y+increment))
-								if (!movePieceAndCheck(curr_board, x, y, x-increment, y+increment, player))
+							if (y+increment < 8 && moveIsValid(x, y, x-increment, y+increment, player))
+								if (!movePieceAndCheck(x, y, x-increment, y+increment, player))
 									return true;
-							
+
 							if (y-increment >= 0 && moveIsValid(x, y, x-increment, y-increment, player))
-								if (!movePieceAndCheck(curr_board, x, y, x-increment, y-increment, player))
+								if (!movePieceAndCheck(x, y, x-increment, y-increment, player))
 									return true;
 						}
 					}
@@ -598,43 +605,43 @@ bool canRelieveCheck(piece & curr_board, bool player)
 				else if (curr_piece.piece_type == KING)
 				{
 					// up-center
-					if (y < 8 && moveIsValid(x, y, x, y+1))
-						if (!movePieceAndCheck(curr_board, x, y, x, y+1, player))
+					if (y < 8 && moveIsValid(x, y, x, y+1, player))
+						if (!movePieceAndCheck(x, y, x, y+1, player))
 							return true;
 
 					// up-right
-					if (y < 8 && x < 8 && moveIsValid(x, y, x+1, y+1))
-						if (!movePieceAndCheck(curr_board, x, y, x+1, y+1, player))
-							return true;	
+					if (y < 8 && x < 12 && moveIsValid(x, y, x+1, y+1, player))
+						if (!movePieceAndCheck(x, y, x+1, y+1, player))
+							return true;
 
 					// up-left
-					if (y < 8 && x > 0 && moveIsValid(x, y, x-1, y+1))
-						if (!movePieceAndCheck(curr_board, x, y, x-1, y+1, player))
+					if (y < 8 && x > 4 && moveIsValid(x, y, x-1, y+1, player))
+						if (!movePieceAndCheck(x, y, x-1, y+1, player))
 							return true;
-					
+
 					// right
-					if (x < 8 && moveIsValid(x, y, x+1, y))
-						if (!movePieceAndCheck(curr_board, x, y, x+1, y, player))
+					if (x < 12 && moveIsValid(x, y, x+1, y, player))
+						if (!movePieceAndCheck(x, y, x+1, y, player))
 							return true;
-					
+
 					// left
-					if (x > 0 && moveIsValid(x, y, x-1, y))
-						if (!movePieceAndCheck(curr_board, x, y, x-1, y, player))
+					if (x > 4 && moveIsValid(x, y, x-1, y, player))
+						if (!movePieceAndCheck(x, y, x-1, y, player))
 							return true;
-					
+
 					// down-center
-					if (y > 0 && moveIsValid(x, y, x, y-1))
-						if (!movePieceAndCheck(curr_board, x, y, x, y-1, player))
+					if (y > 0 && moveIsValid(x, y, x, y-1, player))
+						if (!movePieceAndCheck(x, y, x, y-1, player))
 							return true;
 
 					// down-right
-					if (y > 0 && x < 8 && moveIsValid(x, y, x+1, y-1))
-						if (!movePieceAndCheck(curr_board, x, y, x+1, y-1, player))
+					if (y > 0 && x < 12 && moveIsValid(x, y, x+1, y-1, player))
+						if (!movePieceAndCheck(x, y, x+1, y-1, player))
 							return true;
 
 					// down-left
-					if (y > 0 && x > 0 && moveIsValid(x, y, x11, y-1))
-						if (!movePieceAndCheck(curr_board, x, y, x-1, y-1, player))
+					if (y > 0 && x > 4 && moveIsValid(x, y, x-1, y-1, player))
+						if (!movePieceAndCheck(x, y, x-1, y-1, player))
 							return true;
 				}
 			}
@@ -651,27 +658,12 @@ bool canRelieveCheck(piece & curr_board, bool player)
  */
 int checkmate(bool player)
 {
-	// create copy of current board state
-	piece curr_board[8][8];
-	for (int x = 0; x < 8; x++)
-	{
-		for (int y = 0; y < 8; y++)
-		{
-			piece temp;
-			temp.piece_type = board[x+4][y].piece_type;
-			temp.extend_dist = board[x+4][y].extend_dist;
-			temp.close_dist = board[x+4][y].close_dist;
-			temp.colour = board[x+4][y].colour;
-			curr_board[x][y] = temp;
-		}
-	}
-
-	bool canRelieveCheck = canRelieveCheck(curr_board, player);
+	bool relieveCheck = canRelieveCheck(player);
 
 	// check or checkmate
-	if (check(player, curr_board))
+	if (check(player))
 	{
-		if (canRelieveCheck)
+		if (relieveCheck)
 			return 1;
 		else
 			return 2;
@@ -680,7 +672,7 @@ int checkmate(bool player)
 	// stalemate or nothing
 	else
 	{
-		if (canRelieveCheck)
+		if (relieveCheck)
 			return 0;
 		else
 			return 3;
@@ -723,23 +715,67 @@ int x_coord(char letter)
 }
 
 /*
+ * Returns the corresponding letter to an x coordinate.
+ * A = 4
+ * B = 5
+ * C = 6
+ * D = 7
+ * E = 8
+ * F = 9
+ * G = 10
+ * H = 11
+ *
+ * CINDY
+ */
+char letter(int x)
+{
+	if (x == 4)
+		return 'A';
+	else if (x == 5)
+		return 'B';
+	else if (x == 6)
+		return 'C';
+	else if (x == 7)
+		return 'D';
+	else if (x == 8)
+		return 'E';
+	else if (x == 9)
+		return 'F';
+	else if (x == 10)
+		return 'G';
+	else if (x == 11)
+		return 'H';
+	return '!';
+}
+
+/*
  * Records the chess move to a file.
  *
  * HANK
  */
-void recordMove(int x_start, int y_start, int x_end, int y_end)
+void recordMove(TFileHandle fout, int x_start, int y_start, int x_end, int y_end)
 {
-	// TO DO
+	writeLongPC(fout, x_start);
+	writeEndlPC(fout);
+	writeLongPC(fout, y_start);
+	writeEndlPC(fout);
+	writeLongPC(fout, x_end);
+	writeEndlPC(fout);
+	writeLongPC(fout, y_end);
+	writeEndlPC(fout);
 }
 
 /*
- * Idk how this function works...
+ * Reads a chess move from a file.
  *
  * HANK
  */
-void readMoves()
+void readMove(TFileHandle fin, int & x_start, int & y_start, int & x_end, int & y_end)
 {
-	// TO DO
+	readIntPC(fin, x_start);
+	readIntPC(fin, y_start);
+	readIntPC(fin, x_end);
+	readIntPC(fin, y_end);
 }
 
 /*
@@ -796,6 +832,12 @@ void replaySavedMatch()
 // currently for testing purposes
 task main()
 {
+	// file IO
+	TFileHandle fin, fout;
+	bool fileOkay = openReadPC(fin, INPUT_FILE);
+	//bool fileOkay = openWritePC(fout, OUTPUT_FILE);
+
+
 	// initialize motor multiplexer and sensors
 	SensorType[S1] = sensorI2CCustom;
 	MSMMUXinit();
@@ -809,6 +851,7 @@ task main()
 	nMotorEncoder(claw_motor) = 0;
 
 	// testing
+	/*
 	piece test;
 	test.piece_type = PAWN;
 	test.extend_dist = PAWN_EXTEND_DIST;
@@ -821,4 +864,12 @@ task main()
 		movePiece(i, 6, i, 4, test);
 	}
 	closeClaw(0);
+	*/
+	int x_start = 0, y_start = 0, x_end = 1, y_end = 1;
+	readMove(fin, x_start, y_start, x_end, y_end);
+	displayString(1, "%d %d %d %d", x_start, y_start, x_end, y_end);
+	wait1Msec(5000);
+
+	closeFilePC(fin);
+	//closeFilePC(fout);
 }
