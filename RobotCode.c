@@ -546,13 +546,6 @@ void makeMove(int team)
 	displayString(1, "");
 }
 */
-void clearDisplay()
-{
-	for(int counter  = 1; counter < 10; counter++)
-	{
-		displayString(counter, "                 ");
-	}
-}
 
 int getSelection()
 {
@@ -576,7 +569,7 @@ int getSelection()
 			displayString(9, "choice -> %d", selection+1);
 		}
 	}
-	clearDisplay();
+	eraseDisplay();
 	return selection;
 }
 
