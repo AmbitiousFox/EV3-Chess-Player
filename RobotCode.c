@@ -381,15 +381,310 @@ bool moveIsValid(int x_start, int y_start, int x_end, int y_end, bool white_turn
 	// TO DO
 }
 
+
+/*
+ * Checks whether the player is in check.
+ * 
+ * CINDY
+ */
+bool check(bool player, piece & board_state[8][8])
+{
+	// find location of player's king
+	int x_king = 0, y_king = 0;
+	for (int x = 0; x < 8; x++)
+	{
+		for (int y = 0; y < 8; y++)
+		{
+			if (board_state[x][y].piece_type == KING && board_state[x][y].colour == player)
+			{
+				x_king = x;
+				y_king = y;
+			}
+		}
+	}
+
+	// for each of opponent's pieces, check if that piece can capture the king
+	for (int x = 0; x < 8; x++)
+		for (int y = 0; y < 8; y++)
+			if (board_state[x][y].colour != player && moveIsValid(x, y, x_king, y_king, player))
+				return true;
+	
+	return false;
+}
+
+/*
+ * Helper function for checkmate algorithm.
+ * 
+ * CINDY
+ */
+bool movePieceAndCheck(piece & board_state[8][8], int x_start, int y_start, int x_end, int y_end, bool player)
+{
+	piece temp = board_state[x_end][y_end];
+	piece null_piece;
+	null_piece.piece_type = NULL;
+
+	curr_board[x_end][y_end] = board_state[x_start][y_start];
+	curr_board[x_start][y_start] = null_piece;
+
+	if (!check(player, board_state))
+		return false;
+	
+	curr_board[x_start][y_start] = curr_board[x_end][y_end];
+	curr_board[x_end][y_end] = temp;
+	
+	return true;
+}
+
+/*
+ * Helper function for checkmate algorithm. (BRUTE FORCE ALGORITHM)
+ * 
+ * CINDY
+ */
+bool canRelieveCheck(piece & curr_board, bool player)
+{
+	// for every possible move the player can make, check if it 
+	// results in check
+	for (int x = 0; x < 8; x++)
+	{
+		for (int y = 0; y < 8; y++)
+		{
+			piece curr_piece = curr_board[x][y];
+
+			if (curr_piece.colour == player)
+			{
+				// PAWN (NEED TO CHECK FOR EN-PASSANT)
+				if (curr_piece.piece_type == PAWN)
+				{
+					// white
+					if (player)
+					{
+						// move
+						for (int y_end = y+1; y_end <= y+2; y_end++)
+						{
+							if (moveIsValid(x, y, x, y_end, player))
+								if (!movePieceAndCheck(curr_board, x, y, x, y_end, player))
+									return true;
+							else
+								break;
+						}
+
+						// capture
+						if (x > 0 && moveIsValid(x, y, x-1, y+1, player))
+							if (!movePieceAndCheck(curr_board, x, y, x-1, y+1, player))
+									return true;
+						if (x < 7 && moveIsValid(x, y, x+1, y+1, player))
+							if (!movePieceAndCheck(curr_board, x, y, x+1, y+1, player))
+									return true;
+					}
+
+					// black
+					else
+					{
+						// move
+						for (int y_end = y-1; y_end >= y-2; y_end--)
+						{
+							if (moveIsValid(x, y, x, y_end, player))
+								if (!movePieceAndCheck(curr_board, x, y, x, y_end, player))
+									return true;
+							else
+								break;
+						}
+
+						// capture
+						if (x > 0 && moveIsValid(x, y, x-1, y-1, player))
+							if (!movePieceAndCheck(curr_board, x, y, x-1, y-1, player))
+									return true;
+						if (x < 7 && moveIsValid(x, y, x+1, y-1, player))
+							if (!movePieceAndCheck(curr_board, x, y, x+1, y-1, player))
+									return true;
+					}
+				}
+				
+				// ROOK OR QUEEN
+				else if (curr_piece.piece_type == ROOK || curr_piece.piece_type == QUEEN)
+				{
+					// right
+					for (int x_end = x+1; x_end < 8; x_end++)
+						if (moveIsValid(x, y, x_end, y, player))
+							if (!movePieceAndCheck(curr_board, x, y, x_end, player))
+								return true;
+					
+					// left
+					for (int x_end = x-1; x_end >= 0; x_end--)
+						if (moveIsValid(x, y, x_end, y, player))
+							if (!movePieceAndCheck(curr_board, x, y, x_end, y, player))
+								return true;
+					
+					// up
+					for (int y_end = y+1; y_end < 8; y_end++)
+						if (moveIsValid(x, y, x, y_end, player))
+							if (!movePieceAndCheck(curr_board, x, y, x, y_end, player))
+								return true;
+
+					// down
+					for (int y_end = y-1; y_end >= 0; y_end--)
+						if (moveIsValid(x, y, x, y_end, player))
+							if (!movePieceAndCheck(curr_board, x, y, x, y_end, player))
+								return true;
+				}
+
+				// KNIGHT
+				else if (curr_piece.piece_type == KNIGHT)
+				{
+					// right one
+					if (x < 7 && && y < 6 && moveIsValid(x, y, x+1, y+2, player))
+						if (!movePieceAndCheck(curr_board, x, y, x+1, y+2, player))
+							return true;
+					if (x < 7 && y > 1 && moveIsValid(x, y, x+1, y-2, player))
+						if (!movePieceAndCheck(curr_board, x, y, x+1, y-2, player))
+							return true;
+
+					// left one
+					if (x > 0 && && y < 6 && moveIsValid(x, y, x-1, y+2, player))
+						if (!movePieceAndCheck(curr_board, x, y, x-1, y+2, player))
+							return true;
+					if (x > 0 && y > 1 && moveIsValid(x, y, x-1, y-2, player))
+						if (!movePieceAndCheck(curr_board, x, y, x-1, y-2, player))
+							return true; 
+
+					// right two
+					if (x < 6 && && y < 7 && moveIsValid(x, y, x+2, y+1, player))
+						if (!movePieceAndCheck(curr_board, x, y, x+2, y+1, player))
+							return true;
+					if (x < 6 && y > 0 && moveIsValid(x, y, x+2, y-1, player))
+						if (!movePieceAndCheck(curr_board, x, y, x+2, y-1, player))
+							return true;
+					
+					// left two
+					if (x > 1 && && y < 7 && moveIsValid(x, y, x-2, y+1, player))
+						if (!movePieceAndCheck(curr_board, x, y, x-2, y+1, player))
+							return true;
+					if (x > 1 && y > 0 && moveIsValid(x, y, x-2, y-1, player))
+						if (!movePieceAndCheck(curr_board, x, y, x-2, y-1, player))
+							return true;
+				}
+
+				// BISHOP OR QUEEN
+				else if (curr_piece.piece_type == BISHOP || curr_piece.piece_type == QUEEN)
+				{
+					for (int increment = 0; increment < 8; increment++)
+					{
+						// right
+						if (x+increment < 8)
+						{
+							if (y+increment < 8 && moveIsValid(x, y, x+increment, y+increment))
+								if (!movePieceAndCheck(curr_board, x, y, x+increment, y+increment, player))
+									return true;
+							
+							if (y-increment >= 0 && moveIsValid(x, y, x+increment, y-increment, player))
+								if (!movePieceAndCheck(curr_board, x, y, x+increment, y-increment, player))
+									return true;
+						}
+						// left
+						if (x-increment >= 0)
+						{
+							if (y+increment < 8 && moveIsValid(x, y, x-increment, y+increment))
+								if (!movePieceAndCheck(curr_board, x, y, x-increment, y+increment, player))
+									return true;
+							
+							if (y-increment >= 0 && moveIsValid(x, y, x-increment, y-increment, player))
+								if (!movePieceAndCheck(curr_board, x, y, x-increment, y-increment, player))
+									return true;
+						}
+					}
+				}
+
+				// KING (DOES CASTLING NEED TO BE CHECKED?)
+				else if (curr_piece.piece_type == KING)
+				{
+					// up-center
+					if (y < 8 && moveIsValid(x, y, x, y+1))
+						if (!movePieceAndCheck(curr_board, x, y, x, y+1, player))
+							return true;
+
+					// up-right
+					if (y < 8 && x < 8 && moveIsValid(x, y, x+1, y+1))
+						if (!movePieceAndCheck(curr_board, x, y, x+1, y+1, player))
+							return true;	
+
+					// up-left
+					if (y < 8 && x > 0 && moveIsValid(x, y, x-1, y+1))
+						if (!movePieceAndCheck(curr_board, x, y, x-1, y+1, player))
+							return true;
+					
+					// right
+					if (x < 8 && moveIsValid(x, y, x+1, y))
+						if (!movePieceAndCheck(curr_board, x, y, x+1, y, player))
+							return true;
+					
+					// left
+					if (x > 0 && moveIsValid(x, y, x-1, y))
+						if (!movePieceAndCheck(curr_board, x, y, x-1, y, player))
+							return true;
+					
+					// down-center
+					if (y > 0 && moveIsValid(x, y, x, y-1))
+						if (!movePieceAndCheck(curr_board, x, y, x, y-1, player))
+							return true;
+
+					// down-right
+					if (y > 0 && x < 8 && moveIsValid(x, y, x+1, y-1))
+						if (!movePieceAndCheck(curr_board, x, y, x+1, y-1, player))
+							return true;
+
+					// down-left
+					if (y > 0 && x > 0 && moveIsValid(x, y, x11, y-1))
+						if (!movePieceAndCheck(curr_board, x, y, x-1, y-1, player))
+							return true;
+				}
+			}
+		}
+	}
+	return false;
+}
+
 /*
  * Checks whether the player is in check (1), checkmate (2), or stalemate (3).
  * Returns 0 otherwise.
  *
- * AARON
+ * CINDY
  */
-int check(bool white)
+int checkmate(bool player)
 {
-	// TO DO
+	// create copy of current board state
+	piece curr_board[8][8];
+	for (int x = 0; x < 8; x++)
+	{
+		for (int y = 0; y < 8; y++)
+		{
+			piece temp;
+			temp.piece_type = board[x+4][y].piece_type;
+			temp.extend_dist = board[x+4][y].extend_dist;
+			temp.close_dist = board[x+4][y].close_dist;
+			temp.colour = board[x+4][y].colour;
+			curr_board[x][y] = temp;
+		}
+	}
+
+	bool canRelieveCheck = canRelieveCheck(curr_board, player);
+
+	// check or checkmate
+	if (check(player, curr_board))
+	{
+		if (canRelieveCheck)
+			return 1;
+		else
+			return 2;
+	}
+
+	// stalemate or nothing
+	else
+	{
+		if (canRelieveCheck)
+			return 0;
+		else
+			return 3;
+	}
 }
 
 /*
