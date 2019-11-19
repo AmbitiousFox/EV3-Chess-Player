@@ -390,9 +390,225 @@ void invalidInputMessage()
  *
  * AARON
  */
-bool moveIsValid(int x_start, int y_start, int x_end, int y_end, bool white_turn)
+bool moveIsValid(int x_start, int y_start, int x_end, int y_end, bool player)
 {
-	// TO DO
+	// check that start and end are valid tiles
+	if (x_start < 4 || x_start > 11 || x_end < 4 || x_end > 11 || y_start < 0 || y_start > 7 || y_end < 0 || y_end > 7)
+		return false;
+
+	// check that start and end are not the same tile
+	if (x_start == x_end && y_start == y_end)
+		return false;
+	
+	piece curr_piece = board[x_start][y_start];
+
+	// check that piece at start tile is owned by the player
+	if (curr_piece.piece_type == NULL_PIECE || curr_piece.colour != player)
+		return false;
+
+	// check that piece at end tile is not owned by player
+	if (board[x_end][y_end].piece_type != NULL_PIECE && board[x_end][y_end].colour == player)
+		return false;
+
+	// PAWN (NEED TO CHECK DOUBLE STEP AND EN-PASSANT)
+	if (curr_piece.piece_type == PAWN)
+	{
+		// white
+		if (player)
+		{
+			if (y_end - y_start == 1 && board[x_end][y_end].piece_type == NULL_PIECE)
+				return true;
+			else
+				return false;
+		}
+
+		// black
+		else
+		{
+			if (y_start - y_end == 1 && board[x_end][y_end].piece_type == NULL_PIECE)
+				return true;
+			else
+				return false;
+		}
+	}
+
+	// ROOK
+	else if (curr_piece.piece_type == ROOK)
+	{		
+		// vertical
+		if (x_start == x_end)
+		{
+			// up
+			if (y_end > y_start)
+			{
+				for (int row = y_start+1; row < y_end; row++)
+					if (board[x_end][row].piece_type != NULL_PIECE)
+						return false;
+			}
+
+			// down
+			else
+			{
+				for (int row = y_start-1; row > y_end; row--)
+					if (board[x_end][row].piece_type != NULL_PIECE)
+						return false;
+			}	
+
+			return true;		
+		}
+
+		// horizontal
+		else if (y_start == y_end)
+		{
+			// left
+			if (x_end < x_start)
+			{
+				for (int col = x_start-1; col > x_end; col--)
+					if (board[col][y_end].piece_type != NULL_PIECE)
+						return false;
+			}
+
+			// right
+			else
+			{
+				for (int col = x_start+1; col < x_end; col++)
+					if (board[col][y_end].piece_type != NULL_PIECE)
+						return false;
+			}
+			
+			return true;
+		}
+
+		return false;
+	}
+
+	// KNIGHT
+	else if (curr_piece.piece_type == KNIGHT)
+	{
+		return (abs(x_end - x_start) == 1 && abs(y_end - y_start) == 2) || (abs(y_end - y_start) == 1 && abs(x_end - x_start) == 2);
+	}
+
+	// BISHOP
+	else if (curr_piece.piece_type == BISHOP)
+	{
+		// check diagonal movement
+		if (abs(x_end - x_start) != abs(y_end - y_start))
+			return false;
+
+		int right = 1;
+		if (x_end < x_start)
+			right = -1;
+
+		// up
+		if (y_end > y_start)
+		{
+			for (int increment = 1; increment <= y_end - y_start; increment++)
+			{
+				if (board[x_start + right*increment][y_start+increment].piece_type != NULL_PIECE)
+					return false;
+			}
+		}
+
+		// down
+		else
+		{
+			for (int increment = 1; increment <= y_start - y_end; increment++)
+			{
+				if (board[x_start + right*increment][y_start-increment].piece_type != NULL_PIECE)
+					return false;
+			}
+		}
+		
+		return true;
+	}
+
+	// QUEEN
+	else if (curr_piece.piece_type == QUEEN)
+	{
+		// rook style movement
+		
+		// vertical
+		if (x_start == x_end)
+		{
+			// up
+			if (y_end > y_start)
+			{
+				for (int row = y_start+1; row < y_end; row++)
+					if (board[x_end][row].piece_type != NULL_PIECE)
+						return false;
+			}
+
+			// down
+			else
+			{
+				for (int row = y_start-1; row > y_end; row--)
+					if (board[x_end][row].piece_type != NULL_PIECE)
+						return false;
+			}	
+
+			return true;		
+		}
+
+		// horizontal
+		else if (y_start == y_end)
+		{
+			// left
+			if (x_end < x_start)
+			{
+				for (int col = x_start-1; col > x_end; col--)
+					if (board[col][y_end].piece_type != NULL_PIECE)
+						return false;
+			}
+
+			// right
+			else
+			{
+				for (int col = x_start+1; col < x_end; col++)
+					if (board[col][y_end].piece_type != NULL_PIECE)
+						return false;
+			}
+			
+			return true;
+		}	
+
+		// bishop style movement
+
+		// check diagonal movement
+		if (abs(x_end - x_start) != abs(y_end - y_start))
+			return false;
+
+		int right = 1;
+		if (x_end < x_start)
+			right = -1;
+
+		// up
+		if (y_end > y_start)
+		{
+			for (int increment = 1; increment <= y_end - y_start; increment++)
+			{
+				if (board[x_start + right*increment][y_start+increment].piece_type != NULL_PIECE)
+					return false;
+			}
+		}
+
+		// down
+		else
+		{
+			for (int increment = 1; increment <= y_start - y_end; increment++)
+			{
+				if (board[x_start + right*increment][y_start-increment].piece_type != NULL_PIECE)
+					return false;
+			}
+		}
+		
+		return true;
+	}
+
+	// KING (CHECK CASTLING)
+	else
+	{
+		return (abs(x_end - x_start) == 1 || x_end - x_start == 0) && (abs(y_end - y_start) == 1 || y_end - y_start == 0);
+	}
 }
 
 /*
@@ -437,7 +653,7 @@ bool movePieceAndCheck(int x_start, int y_start, int x_end, int y_end, bool play
 	piece temp;
 	temp = board[x_end][y_end];
 	piece null_piece;
-	null_piece.piece_type = NULL;
+	null_piece.piece_type = NULL_PIECE;
 
 	board[x_end][y_end] = board[x_start][y_start];
 	board[x_start][y_start] = null_piece;
