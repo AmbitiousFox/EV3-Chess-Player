@@ -390,7 +390,7 @@ void invalidInputMessage()
  *
  * AARON
  */
-bool isMoveValid(int x_start, int y_start, int x_end, int y_end, bool white_turn)
+bool moveIsValid(int x_start, int y_start, int x_end, int y_end, bool white_turn)
 {
 	// TO DO
 }
@@ -424,6 +424,8 @@ bool check(bool player)
 
 	return false;
 }
+
+
 
 /*
  * Helper function for checkmate algorithm.
@@ -1015,5 +1017,5 @@ task main()
 
 	closeFilePC(fin);
 	//closeFilePC(fout);
-  
+
 }
