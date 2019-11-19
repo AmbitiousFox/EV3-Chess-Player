@@ -643,7 +643,7 @@ bool movePieceAndCheck(int x_start, int y_start, int x_end, int y_end, bool play
 	piece temp;
 	temp = board[x_end][y_end];
 	piece null_piece;
-	null_piece.piece_type = NULL;
+	null_piece.piece_type = NULL_PIECE;
 
 	board[x_end][y_end] = board[x_start][y_start];
 	board[x_start][y_start] = null_piece;
