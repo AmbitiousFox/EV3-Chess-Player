@@ -375,17 +375,25 @@ void removePiece(int x, int y, piece & currPiece)
 	movePiece(x, y, endx, endy, currPiece);
 }
 
+void invalidInputMessage()
+{
+	displayString(3, "INVALID MOVE, PLEASE TRY AGAIN.")
+	displayString(5, "Press any button..")
+	while(!getButtonPress(buttonAny)) {}
+	displayString(3, "");
+	displayString(5, "");
+}
+
 /*
  * Checks whether the chess move of the piece at (x_start, y_start) to (x_end, y_end)
  * is valid.
  *
  * AARON
  */
-bool moveIsValid(int x_start, int y_start, int x_end, int y_end, bool white_turn)
+bool isMoveValid(int x_start, int y_start, int x_end, int y_end, bool white_turn)
 {
 	// TO DO
 }
-
 
 /*
  * Checks whether the player is in check.
@@ -799,13 +807,126 @@ void addGame()
 }
 
 /*
+ *
+ *
+ *  Alex
+ *
+ */
+void setBoard()
+{
+	
+}
+
+void resetBoard()
+{
+	
+}
+
+void displaySelection() 
+{
+	displayString(1, "Please Enter A Selection Using the Right and Left Arrow Keys");
+	displayString(4, "1. 2 Player");
+	displayString(5, "2. Player Versus AI");
+	displayString(6, "3. Replay Game");
+	displayString(7, "4. Exit Game");
+}
+
+void squareSelect(int & x_value, int & y_value)
+{
+	displayString(5, "Select a Square by using the right and left arrows to"
+	+ " change the value, and the up and down button to change the value being "
+	"changed");
+		
+	displayString(7, "%c%d", (x+'A'), y+1);
+	while(!getButtonPress(buttonEnter)){
+		if(getButtonPress(buttonUp) || getButtonPress(buttonDown))
+			y_selection = !y_selection;
+		if(getButtonPress(buttonRight))
+		{
+			while(getButtonPress(buttonRight)) {}
+			if(y_selection)
+				++y_value %= 8;
+			else
+				++x_value %= 8;
+		}
+		if(getButtonPress(buttonLeft))
+		{
+			while(getButtonPress(buttonLeft)) {}
+			if(y_selection)
+				y_value = (y_value-1+8)%8;
+			else
+				x_value = (x_value-1+8)%8;
+		}
+	}
+	displayString(5, "");
+	displayString(7, "");
+}
+
+void makeMove(int team)
+{
+	if(team)
+		displayString(1, "Player 1's Move");
+	else
+		displayString(1, "Player 2's Move");
+		
+	int init_x = 0, init_y = 0, final_x = 0, final_y = 0;
+	
+	do
+	{
+		
+		while(getTeam(init_x, init_y) != team)
+		{
+			displayString(3, "Please enter your initial move.");
+			squareSelect(init_x, init_y);
+			displayString(3, "");
+			
+			if(getTeam(init_x, init_y) != team)
+				invalidInputMessage();
+		}
+		
+		while(!isMoveValid(init_x, init_y, final_x, final_y, team))
+		{
+			displayString(3, "Please enter where you want to move this piece");
+			displayString(4, "If you want to go back, press the same square");
+			squareSelect(final_x, final_y);
+			displayString(3, "");
+			displayString(4, "");
+			
+			if(!isMoveValid(init_x, init_y, final_x, final_y, team))
+				invalidInputMessage();
+		}
+	}while(getTeam(init_x, init_y) != team && !isMoveValid(init_x, init_y, final_x, final_y, team) && (init_x != final_x || init_y != final_y));
+	
+	movePiece(init_x, init_y, final_x, final_y);
+	
+	displayString(1, "");
+}
+
+void clearDisplay()
+{
+	for(int counter  = 0; counter < 10; counter++)
+		displayString(counter, "");
+}
+
+/*
  * Executes player vs player mode.
  *
  * AARON
  */
 void playerVsPlayer()
 {
-	// TO DO
+	bool run = true;
+	while(run) 
+	{
+		makeMove(1);
+		if(checkmate() == 1 || checkmate() == 2)
+			run = false;
+		if(run)
+		makeMove(1);
+		if(checkmate() == 1 || checkmate() == 2)
+			run = false;
+	}
+	displayWinMessage();
 }
 
 /*
