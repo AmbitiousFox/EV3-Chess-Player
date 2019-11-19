@@ -9,6 +9,7 @@ struct piece
 {
 	int piece_type;
 	bool colour; // true = white, false = black
+	bool  first_move;
 };
 
 //combined chess board and extra / capture pieces array that matches with coordinate system
@@ -24,7 +25,7 @@ const int KING = 5;
 const int NULL_PIECE = 6;
 
 bool check(bool);
-bool movePieceAndCheck(int, int, int, int, bool);
+bool movePieceAndCheck(int, int, int, int, bool, bool);
 
 void initBoard()
 {
@@ -62,8 +63,10 @@ void initBoard()
         piece b_pawn, w_pawn;
         b_pawn.piece_type = PAWN;
         b_pawn.colour = false;
+		b_pawn.first_move = true;
         w_pawn.piece_type = PAWN;
         w_pawn.colour = true;
+		w_pawn.first_move = true;
 
         board[i][1] = w_pawn;
         board[i][6] = b_pawn;
@@ -73,12 +76,16 @@ void initBoard()
     piece b_rook1, b_rook2, w_rook1, w_rook2;
     b_rook1.piece_type = ROOK;
     b_rook1.colour = false;
+	b_rook1.first_move = true;
     b_rook2.piece_type = ROOK;
     b_rook2.colour = false;
+	b_rook2.first_move = true;
     w_rook1.piece_type = ROOK;
     w_rook1.colour = true;
+	w_rook1.first_move = true;
     w_rook2.piece_type = ROOK;
     w_rook2.colour = true;
+	w_rook2.first_move = true;
 
     board[4][0] = w_rook1;
     board[11][0] = w_rook2;
@@ -131,8 +138,10 @@ void initBoard()
     piece b_king, w_king;
     b_king.piece_type = KING;
     b_king.colour = false;
+	b_king.first_move = true;
     w_king.piece_type = KING;
     w_king.colour = true;
+	w_king.first_move = true;
 
     board[8][0] = w_king;
     board[8][7] = b_king;
@@ -182,19 +191,23 @@ bool moveIsValid(int x_start, int y_start, int x_end, int y_end, bool player, bo
 	if (board[x_end][y_end].piece_type != NULL_PIECE && board[x_end][y_end].colour == player)
 		return false;
 
-	// PAWN (NEED TO CHECK DOUBLE STEP AND EN-PASSANT)
+	// PAWN (NEED TO CHECK EN-PASSANT)
 	if (curr_piece.piece_type == PAWN)
 	{
 		// white
 		if (player)
 		{
-			// move
+			// move 1
 			if (x_start == x_end && y_end - y_start == 1 && board[x_end][y_end].piece_type == NULL_PIECE)
-				return !checkForCheck || !(movePieceAndCheck(x_start, y_start, x_end, y_end, player));
+				return !checkForCheck || !(movePieceAndCheck(x_start, y_start, x_end, y_end, player, false));
+			
+			// move 2
+			else if (x_start == x_end && y_end - y_start == 2 && board[x_end][y_end-1].piece_type == NULL_PIECE && board[x_end][y_end].piece_type == NULL_PIECE && curr_piece.first_move)
+				return !checkForCheck || !(movePieceAndCheck(x_start, y_start, x_end, y_end, player, false));
 			
 			// capture
 			else if (abs(x_start - x_end) == 1 && y_end - y_start == 1 && board[x_end][y_end].piece_type != NULL_PIECE && board[x_end][y_end].colour != player)
-				return !checkForCheck || !(movePieceAndCheck(x_start, y_start, x_end, y_end, player));
+				return !checkForCheck || !(movePieceAndCheck(x_start, y_start, x_end, y_end, player, false));
 			
 			else
 				return false;
@@ -205,11 +218,15 @@ bool moveIsValid(int x_start, int y_start, int x_end, int y_end, bool player, bo
 		{
 			// move
 			if (x_start == x_end && y_start - y_end == 1 && board[x_end][y_end].piece_type == NULL_PIECE) 
-				return !checkForCheck || !(movePieceAndCheck(x_start, y_start, x_end, y_end, player));
+				return !checkForCheck || !(movePieceAndCheck(x_start, y_start, x_end, y_end, player, false));
+
+			// move 2
+			else if (x_start == x_end && y_start - y_end == 2 && board[x_end][y_end+1].piece_type == NULL_PIECE && board[x_end][y_end].piece_type == NULL_PIECE && curr_piece.first_move)
+				return !checkForCheck || !(movePieceAndCheck(x_start, y_start, x_end, y_end, player, false));
 			
 			// capture
 			else if (abs(x_start - x_end) == 1 && y_start - y_end == 1 && board[x_end][y_end].piece_type != NULL_PIECE && board[x_end][y_end].colour != player)
-				return !checkForCheck || !(movePieceAndCheck(x_start, y_start, x_end, y_end, player));
+				return !checkForCheck || !(movePieceAndCheck(x_start, y_start, x_end, y_end, player, false));
 			
 			else
 				return false;
@@ -238,7 +255,7 @@ bool moveIsValid(int x_start, int y_start, int x_end, int y_end, bool player, bo
 						return false;
 			}	
 
-			return !checkForCheck || !(movePieceAndCheck(x_start, y_start, x_end, y_end, player));		
+			return !checkForCheck || !(movePieceAndCheck(x_start, y_start, x_end, y_end, player, false));		
 		}
 
 		// horizontal
@@ -260,7 +277,7 @@ bool moveIsValid(int x_start, int y_start, int x_end, int y_end, bool player, bo
 						return false;
 			}
 			
-			return !checkForCheck || !(movePieceAndCheck(x_start, y_start, x_end, y_end, player));
+			return !checkForCheck || !(movePieceAndCheck(x_start, y_start, x_end, y_end, player, false));
 		}
 
 		return false;
@@ -270,7 +287,7 @@ bool moveIsValid(int x_start, int y_start, int x_end, int y_end, bool player, bo
 	else if (curr_piece.piece_type == KNIGHT)
 	{
 		if ((abs(x_end - x_start) == 1 && abs(y_end - y_start) == 2) || (abs(y_end - y_start) == 1 && abs(x_end - x_start) == 2))
-			return !checkForCheck || !(movePieceAndCheck(x_start, y_start, x_end, y_end, player));
+			return !checkForCheck || !(movePieceAndCheck(x_start, y_start, x_end, y_end, player, false));
 		return false;
 	}
 
@@ -305,7 +322,7 @@ bool moveIsValid(int x_start, int y_start, int x_end, int y_end, bool player, bo
 			}
 		}
 		
-		return !checkForCheck || !(movePieceAndCheck(x_start, y_start, x_end, y_end, player));
+		return !checkForCheck || !(movePieceAndCheck(x_start, y_start, x_end, y_end, player, false));
 	}
 
 	// QUEEN
@@ -332,7 +349,7 @@ bool moveIsValid(int x_start, int y_start, int x_end, int y_end, bool player, bo
 						return false;
 			}	
 
-			return !checkForCheck || !(movePieceAndCheck(x_start, y_start, x_end, y_end, player));		
+			return !checkForCheck || !(movePieceAndCheck(x_start, y_start, x_end, y_end, player, false));		
 		}
 
 		// horizontal
@@ -354,7 +371,7 @@ bool moveIsValid(int x_start, int y_start, int x_end, int y_end, bool player, bo
 						return false;
 			}
 			
-			return !checkForCheck || !(movePieceAndCheck(x_start, y_start, x_end, y_end, player));
+			return !checkForCheck || !(movePieceAndCheck(x_start, y_start, x_end, y_end, player, false));
 		}	
 
 		// bishop style movement
@@ -387,14 +404,38 @@ bool moveIsValid(int x_start, int y_start, int x_end, int y_end, bool player, bo
 			}
 		}
 		
-		return !checkForCheck || !(movePieceAndCheck(x_start, y_start, x_end, y_end, player));
+		return !checkForCheck || !(movePieceAndCheck(x_start, y_start, x_end, y_end, player, false));
 	}
 
 	// KING (CHECK CASTLING)
 	else
 	{
+		// move
 		if ((abs(x_end - x_start) == 1 || x_end - x_start == 0) && (abs(y_end - y_start) == 1 || y_end - y_start == 0))
-			return !checkForCheck || !(movePieceAndCheck(x_start, y_start, x_end, y_end, player));
+			return !checkForCheck || !(movePieceAndCheck(x_start, y_start, x_end, y_end, player, false));
+
+		// castling
+		else if (curr_piece.first_move && y_end == y_start)
+		{
+			// queenside
+			if (x_end - x_start == 2 && board[11][y_start].piece_type == ROOK && board[11][y_start].first_move)
+			{
+				for (int col = x_start+1; col < 11; col++)
+					if (board[col][y_start].piece_type != NULL_PIECE)
+						return false;
+				return !checkForCheck || !(movePieceAndCheck(x_start, y_start, x_end, y_end, player, true));
+			}
+
+			// kingside
+			else if (x_start - x_end == 2 && board[4][y_start].piece_type == ROOK && board[4][y_start].first_move)
+			{
+				for (int col = 5; col < x_start; col++)
+					if (board[col][y_start].piece_type != NULL_PIECE)
+						return false;
+				return !checkForCheck || !(movePieceAndCheck(x_start, y_start, x_end, y_end, player, true));
+			}
+		}
+		
 		return false;
 	}
 }
@@ -434,7 +475,7 @@ bool check(bool player)
  *
  * CINDY
  */
-bool movePieceAndCheck(int x_start, int y_start, int x_end, int y_end, bool player)
+bool movePieceAndCheck(int x_start, int y_start, int x_end, int y_end, bool player, bool castling)
 {
     bool isCheck = true;
 
@@ -446,11 +487,58 @@ bool movePieceAndCheck(int x_start, int y_start, int x_end, int y_end, bool play
 	board[x_end][y_end] = board[x_start][y_start];
 	board[x_start][y_start] = null_piece;
 
+	// castling
+	if (castling)
+	{
+		// queenside
+		if (x_start - x_end == 2)
+		{
+			piece temp2;
+    		temp2.piece_type = NULL_PIECE;
+
+			board[7][y_start] = board[4][y_start];
+			board[4][y_start] = temp2;
+		}
+
+		// kingside
+		else if (x_end - x_start == 2)
+		{
+			piece temp2;
+    		temp2.piece_type = NULL_PIECE;
+
+			board[9][y_start] = board[11][y_start];
+			board[11][y_start] = temp2;
+		}
+	}
+
 	if (!check(player))
 		isCheck = false;
 
 	board[x_start][y_start] = board[x_end][y_end];
 	board[x_end][y_end] = temp;
+
+	if (castling)
+	{
+		// queenside
+		if (x_start - x_end == 2)
+		{
+			piece temp2;
+    		temp2.piece_type = NULL_PIECE;
+
+			board[4][y_start] = board[7][y_start];
+			board[7][y_start] = temp2;
+		}
+
+		// kingside
+		else if (x_end - x_start == 2)
+		{
+			piece temp2;
+    		temp2.piece_type = NULL_PIECE;
+
+			board[11][y_start] = board[9][y_start];
+			board[9][y_start] = temp2;
+		}
+	}
 
 	return isCheck;
 }
@@ -665,11 +753,39 @@ int checkmate(bool player)
 
 void movePiece(int x_start, int y_start, int x_end, int y_end)
 {
+	board[x_start][y_start].first_move = false;
+
     piece temp;
     temp.piece_type = NULL_PIECE;
 
     board[x_end][y_end] = board[x_start][y_start];
     board[x_start][y_start] = temp;
+
+	// castling
+	if (board[x_end][y_end].piece_type == KING)
+	{
+		// queenside
+		if (x_start - x_end == 2)
+		{
+			piece temp2;
+    		temp2.piece_type = NULL_PIECE;
+
+			board[7][y_start] = board[4][y_start];
+			board[4][y_start] = temp2;
+			board[7][y_start].first_move = false;
+		}
+
+		// kingside
+		else if (x_end - x_start == 2)
+		{
+			piece temp2;
+    		temp2.piece_type = NULL_PIECE;
+
+			board[9][y_start] = board[11][y_start];
+			board[11][y_start] = temp2;
+			board[9][y_start].first_move = false;
+		}
+	}
 }
 
 
