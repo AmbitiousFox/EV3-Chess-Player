@@ -74,13 +74,16 @@ const float KING_EXTEND_DIST = EXTEND_DIST_Z - 1;
 const float KING_CLOSE_DIST = 1.5;
 
 // chess pieces
-const int PAWN = 0;
-const int ROOK = 1;
-const int KNIGHT = 2;
-const int BISHOP = 3;
-const int QUEEN = 4;
-const int KING = 5;
-const int NULL_PIECE = 6;
+const piece PAWN = {1, EXTEND_DIST_Z, 0, false};
+const piece ROOK = {2, EXTEND_DIST_Z, 1.5, false};
+const piece KNIGHT = {3, EXTEND_DIST_Z, 0.1, false};
+const piece BISHOP = {4, EXTEND_DIST_Z, 1.2, false};
+const piece QUEEN = {5, EXTEND_DIST_Z, 1, false};
+const piece KING = {6, EXTEND_DIST_Z, 1.5, false};
+const piece NULL_PIECE = {0, 0, 0, false};
+
+const bool WHITE = true;
+const bool BLACK = false;
 
 // motors
 const int x_motor1 = mmotor_S1_1;
@@ -89,8 +92,7 @@ const int y_motor = motorC;
 const int z_motor = motorA;
 const int claw_motor = motorD;
 const int touch_x = S2;
-const int touch_y = S3;
-
+const int touch_y = S3
 
 /*
  * Moves the robot in the x direction to column x.
@@ -244,37 +246,25 @@ void raiseClaw()
 }
 
 /*
- * Removes a piece from the chess board array.
- *
- * ALEX
- */
-void removeFromArray(int x, int y)
-{
-	piece null_piece;
-	null_piece.piece_type = NULL_PIECE;
-	board[x][y] = null_piece;
-}
-
-/*
  * Moves the chess piece from tile (x_start, y_start) to (x_end, y_end).
  *        Claw expects to be open at the start, and remain open at the end.
  * ALEX
  */ // it is decreed that white pieces are on the right side.
-void movePiece(int x_start, int y_start, int x_end, int y_end, piece & currPiece)
+void movePiece(int x_start, int y_start, int x_end, int y_end)
 {
 	calibrate_y();
 	move_y(7);
 	calibrate_x();
 	moveArm(x_start, y_start, 0);
-	lowerClaw(currPiece.extend_dist);
-	closeClaw(currPiece.close_dist);
+	lowerClaw(board[x_start][y_start].extend_dist);
+	closeClaw(board[x_start][y_start].close_dist);
 	raiseClaw();
 	moveArm(x_end, y_end, - 0.8);
-	lowerClaw(currPiece.extend_dist);
+	lowerClaw(board[x_start][y_start].extend_dist);
 	openClaw();
 	raiseClaw();
-	board[x_end][y_end] = currPiece;
-	removeFromArray(x_start, y_start);
+	board[x_end][y_end] = board[x_start][y_start];
+	board[x_start][y_start] = NULL_PIECE;
 }
 
 //subfunction of removePiece()
@@ -372,7 +362,7 @@ void removePiece(int x, int y, piece & currPiece)
 		//search columns 0-2
 		holdingSpot(currPiece, endx, endy, 2, 1, 0);
 	}
-	movePiece(x, y, endx, endy, currPiece);
+	movePiece(x, y, endx, endy);
 }
 
 void invalidInputMessage()
@@ -390,225 +380,9 @@ void invalidInputMessage()
  *
  * AARON
  */
-bool moveIsValid(int x_start, int y_start, int x_end, int y_end, bool player)
+bool isMoveValid(int x_start, int y_start, int x_end, int y_end, bool white_turn)
 {
-	// check that start and end are valid tiles
-	if (x_start < 4 || x_start > 11 || x_end < 4 || x_end > 11 || y_start < 0 || y_start > 7 || y_end < 0 || y_end > 7)
-		return false;
-
-	// check that start and end are not the same tile
-	if (x_start == x_end && y_start == y_end)
-		return false;
-	
-	piece curr_piece = board[x_start][y_start];
-
-	// check that piece at start tile is owned by the player
-	if (curr_piece.piece_type == NULL_PIECE || curr_piece.colour != player)
-		return false;
-
-	// check that piece at end tile is not owned by player
-	if (board[x_end][y_end].piece_type != NULL_PIECE && board[x_end][y_end].colour == player)
-		return false;
-
-	// PAWN (NEED TO CHECK DOUBLE STEP AND EN-PASSANT)
-	if (curr_piece.piece_type == PAWN)
-	{
-		// white
-		if (player)
-		{
-			if (y_end - y_start == 1 && board[x_end][y_end].piece_type == NULL_PIECE)
-				return true;
-			else
-				return false;
-		}
-
-		// black
-		else
-		{
-			if (y_start - y_end == 1 && board[x_end][y_end].piece_type == NULL_PIECE)
-				return true;
-			else
-				return false;
-		}
-	}
-
-	// ROOK
-	else if (curr_piece.piece_type == ROOK)
-	{		
-		// vertical
-		if (x_start == x_end)
-		{
-			// up
-			if (y_end > y_start)
-			{
-				for (int row = y_start+1; row < y_end; row++)
-					if (board[x_end][row].piece_type != NULL_PIECE)
-						return false;
-			}
-
-			// down
-			else
-			{
-				for (int row = y_start-1; row > y_end; row--)
-					if (board[x_end][row].piece_type != NULL_PIECE)
-						return false;
-			}	
-
-			return true;		
-		}
-
-		// horizontal
-		else if (y_start == y_end)
-		{
-			// left
-			if (x_end < x_start)
-			{
-				for (int col = x_start-1; col > x_end; col--)
-					if (board[col][y_end].piece_type != NULL_PIECE)
-						return false;
-			}
-
-			// right
-			else
-			{
-				for (int col = x_start+1; col < x_end; col++)
-					if (board[col][y_end].piece_type != NULL_PIECE)
-						return false;
-			}
-			
-			return true;
-		}
-
-		return false;
-	}
-
-	// KNIGHT
-	else if (curr_piece.piece_type == KNIGHT)
-	{
-		return (abs(x_end - x_start) == 1 && abs(y_end - y_start) == 2) || (abs(y_end - y_start) == 1 && abs(x_end - x_start) == 2);
-	}
-
-	// BISHOP
-	else if (curr_piece.piece_type == BISHOP)
-	{
-		// check diagonal movement
-		if (abs(x_end - x_start) != abs(y_end - y_start))
-			return false;
-
-		int right = 1;
-		if (x_end < x_start)
-			right = -1;
-
-		// up
-		if (y_end > y_start)
-		{
-			for (int increment = 1; increment <= y_end - y_start; increment++)
-			{
-				if (board[x_start + right*increment][y_start+increment].piece_type != NULL_PIECE)
-					return false;
-			}
-		}
-
-		// down
-		else
-		{
-			for (int increment = 1; increment <= y_start - y_end; increment++)
-			{
-				if (board[x_start + right*increment][y_start-increment].piece_type != NULL_PIECE)
-					return false;
-			}
-		}
-		
-		return true;
-	}
-
-	// QUEEN
-	else if (curr_piece.piece_type == QUEEN)
-	{
-		// rook style movement
-		
-		// vertical
-		if (x_start == x_end)
-		{
-			// up
-			if (y_end > y_start)
-			{
-				for (int row = y_start+1; row < y_end; row++)
-					if (board[x_end][row].piece_type != NULL_PIECE)
-						return false;
-			}
-
-			// down
-			else
-			{
-				for (int row = y_start-1; row > y_end; row--)
-					if (board[x_end][row].piece_type != NULL_PIECE)
-						return false;
-			}	
-
-			return true;		
-		}
-
-		// horizontal
-		else if (y_start == y_end)
-		{
-			// left
-			if (x_end < x_start)
-			{
-				for (int col = x_start-1; col > x_end; col--)
-					if (board[col][y_end].piece_type != NULL_PIECE)
-						return false;
-			}
-
-			// right
-			else
-			{
-				for (int col = x_start+1; col < x_end; col++)
-					if (board[col][y_end].piece_type != NULL_PIECE)
-						return false;
-			}
-			
-			return true;
-		}	
-
-		// bishop style movement
-
-		// check diagonal movement
-		if (abs(x_end - x_start) != abs(y_end - y_start))
-			return false;
-
-		int right = 1;
-		if (x_end < x_start)
-			right = -1;
-
-		// up
-		if (y_end > y_start)
-		{
-			for (int increment = 1; increment <= y_end - y_start; increment++)
-			{
-				if (board[x_start + right*increment][y_start+increment].piece_type != NULL_PIECE)
-					return false;
-			}
-		}
-
-		// down
-		else
-		{
-			for (int increment = 1; increment <= y_start - y_end; increment++)
-			{
-				if (board[x_start + right*increment][y_start-increment].piece_type != NULL_PIECE)
-					return false;
-			}
-		}
-		
-		return true;
-	}
-
-	// KING (CHECK CASTLING)
-	else
-	{
-		return (abs(x_end - x_start) == 1 || x_end - x_start == 0) && (abs(y_end - y_start) == 1 || y_end - y_start == 0);
-	}
+	// TO DO
 }
 
 /*
@@ -641,8 +415,6 @@ bool check(bool player)
 	return false;
 }
 
-
-
 /*
  * Helper function for checkmate algorithm.
  *
@@ -653,7 +425,7 @@ bool movePieceAndCheck(int x_start, int y_start, int x_end, int y_end, bool play
 	piece temp;
 	temp = board[x_end][y_end];
 	piece null_piece;
-	null_piece.piece_type = NULL_PIECE;
+	null_piece.piece_type = NULL;
 
 	board[x_end][y_end] = board[x_start][y_start];
 	board[x_start][y_start] = null_piece;
@@ -905,6 +677,8 @@ int checkmate(bool player)
 	}
 }
 
+
+
 /*
  * Returns the corresponding x coordinate to a letter.
  * A = 4
@@ -1030,15 +804,6 @@ void addGame()
  *  Alex
  *
  */
-void setBoard()
-{
-
-}
-
-void resetBoard()
-{
-
-}
 
 void displaySelection()
 {
@@ -1188,7 +953,222 @@ void replaySavedMatch()
 {
 	// TO DO
 }
+/*
+void resetBoard()
+{
+	for(int row = 0; row < 8; row++)
+		for(int column = 0; column < 8; column++)
+		{
+			if(board[column][row].piece_type)
+				removePiece(column, row);
+		}
+}*/
 
+void setGame()
+{
+	for(int column = 1; column >= 0; column--)
+		for(int row = 0; row < 8; row++)
+		{
+			movePiece(column+1, row, row+4, 7-column);
+		}
+
+	for(int column = 1; column >= 0; column--)
+		for(int row = 0; row < 8; row++)
+		{
+			movePiece(14-column, row, row+4, column);
+		}
+}
+
+void removePiece(int x_value, int y_value)
+{
+	piece current = board[x_value][y_value];
+	if(current.piece_type == QUEEN.piece_type)
+	{
+		for(int row = 0; row < 8 && current.colour == WHITE; row++)
+			if(!board[0][row].piece_type)
+			{
+				//move piece
+			}
+
+		if(board[1][3].colour == WHITE && !board[1][3].piece_type)
+		{
+			//move piece
+		}
+
+		for(int row = 0; row < 8 && current.colour == BLACK; row++)
+			if(!board[15][row].piece_type)
+			{
+				movePiece(x_value, y_value, 15, row)
+			}
+
+		if(board[14][4].colour == WHITE && !board[14][4].piece_type)
+		{
+
+		}
+	}
+
+	if(current.piece_type == PAWN)
+	{
+		for(int row = 0; row < 8 && current.colour == WHITE; row++)
+		{
+			if(!board[2][row].piece_type)
+			{
+				movePiece(x_value, y_value, 2, row)
+			}
+		}
+
+		for(int row = 0; row < 8 && current.colour == BLACK; row++)
+		{
+			if(!board[13][row].piece_type)
+			{
+				movePiece(x_value, y_value, 13, row)
+			}
+		}
+	}
+
+	if(current.piece_type == ROOK)
+	{
+		if(current.colour === BLACK)
+		{
+			if(!board[14][0].piece_type)
+			{
+				movePiece(x_value, y_value, 14, 0)
+			}
+			if(!board[14][7].piece_type)
+			{
+				movePiece(x_value, y_value, 14, 7)
+			}
+		}
+
+		if(current.colour === WHITE)
+		{
+			if(!board[1][0].piece_type)
+			{
+				movePiece(x_value, y_value, 1, 0)
+			}
+			if(!board[1][7].piece_type)
+			{
+				movePiece(x_value, y_value, 1, 7)
+			}
+		}
+	}
+
+	if(current.piece_type == KNIGHT)
+	{
+		if(current.colour === BLACK)
+		{
+			if(!board[14][1].piece_type)
+			{
+				movePiece(x_value, y_value, 14, 1)
+			}
+			if(!board[14][6].piece_type)
+			{
+				movePiece(x_value, y_value, 14, 6)
+			}
+		}
+
+		if(current.colour === WHITE)
+		{
+			if(!board[1][1].piece_type)
+			{
+				movePiece(x_value, y_value, 1, 1)
+			}
+			if(!board[1][6].piece_type)
+			{
+				movePiece(x_value, y_value, 1, 6)
+			}
+		}
+	}
+
+	if(current.piece_type == BISHOP)
+	{
+		if(current.colour === BLACK)
+		{
+			if(!board[14][2].piece_type)
+			{
+				movePiece(x_value, y_value, 14, 12)
+			}
+			if(!board[14][5].piece_type)
+			{
+				movePiece(x_value, y_value, 14, 5)
+			}
+		}
+
+		if(current.colour === WHITE)
+		{
+			if(!board[1][2].piece_type)
+			{
+				movePiece(x_value, y_value, 1, 2)
+			}
+			if(!board[1][5].piece_type)
+			{
+				movePiece(x_value, y_value, 1, 5)
+			}
+		}
+	}
+
+	if(current.piece_type == KING)
+	{
+		if(current.colour === BLACK)
+		{
+			// move king to
+		}
+
+		if(current.colour === WHITE)
+		{
+			if(!board[1][1].piece_type)
+			{
+				movePiece(x_value, y_value, 1, 1)
+			}
+			if(!board[1][6].piece_type)
+			{
+				movePiece(x_value, y_value, 1, 6)
+			}
+		}
+	}
+}
+
+void initStartState()
+{
+	for(int row = 0; row < 8; row++)
+		for(int column = 0; column < 16; column++)
+			board[column][row] = NULL_PIECE;
+
+	for(int row = 0; row < 8; row++)
+	{
+		board[0][row] = QUEEN;
+		board[0][row].colour = WHITE;
+	}
+
+	board[1][0] = board[1][7] = ROOK;
+	board[1][0].colour = board[1][7].colour = WHITE;
+	board[1][1] = board[1][6] = KNIGHT;
+	board[1][1].colour = board[1][6].colour = WHITE;
+	board[1][2] = board[1][5] = BISHOP;
+	board[1][2].colour = board[1][5].colour = WHITE;
+	board[1][3] = QUEEN;
+	board[1][3].colour = WHITE;
+	board[1][4] = KING;
+	board[1][4].colour = WHITE;
+
+	for(int row = 0; row < 8; row++)
+	{
+		board[2][row] = PAWN;
+		board[2][row].colour = WHITE;
+	}
+
+	for(int row = 0; row < 8; row++)
+		board[15][row] = QUEEN;
+
+	board[14][0] = board[14][7] = ROOK;
+	board[14][1] = board[14][6] = KNIGHT;
+	board[14][2] = board[14][5] = BISHOP;
+	board[14][4] = QUEEN;
+	board[14][3] = KING;
+
+	for(int row = 0; row < 8; row++)
+		board[13][row] = PAWN;
+}
 
 // currently for testing purposes
 task main()
@@ -1197,7 +1177,6 @@ task main()
 	TFileHandle fin, fout;
 	bool fileOkay = openReadPC(fin, INPUT_FILE);
 	//bool fileOkay = openWritePC(fout, OUTPUT_FILE);
-
 
 	// initialize motor multiplexer and sensors
 	SensorType[S1] = sensorI2CCustom;
