@@ -33,8 +33,8 @@ string INPUT_FILE = "saved_match.txt";
 string OUTPUT_FILE = "saved_match.txt";
 
 // some function prototypes
-bool check(bool);
-bool movePieceAndCheck(int, int, int, int, bool, bool);
+bool check(bool player);
+bool movePieceAndCheck(int x_start, int y_start, int x_end, int y_end, bool player, bool castling);
 
 // chess piece type
 struct piece
@@ -51,7 +51,7 @@ piece board[16][8];
 
 // physical system constants
 const float WHEEL_RADIUS_X = 3.65;
-const float WHEEL_RADIUS_Y = 1.65;
+const float WHEEL_RADIUS_Y = 1.9;
 const float TILE_SIDE = 3;
 const float EXTEND_DIST_Z = 5.2;
 const float EXTEND_DIST_CLAW = 2.5;
@@ -104,13 +104,13 @@ const int touch_y = S3;
  */
 void move_x(int x, int offset)
 {
-	if(MSMMotorEncoder(x_motor1)/360.0*DIST_PER_ROTATION_X < x*TILE_SIDE + 1.5 + offset)
+	if(MSMMotorEncoder(x_motor1)/360.0*DIST_PER_ROTATION_X < x*TILE_SIDE + 1 + offset)
 	{
-		while(MSMMotorEncoder(x_motor1)/360.0*DIST_PER_ROTATION_X < x*TILE_SIDE + 1.5 + offset)
+		while(MSMMotorEncoder(x_motor1)/360.0*DIST_PER_ROTATION_X < x*TILE_SIDE + 1 + offset)
 		{
 			MSMMotor(x_motor1, MOTOR_X_SPEED);
 			MSMMotor(x_motor2, MOTOR_X_SPEED);
-			while(MSMMotorEncoder(x_motor1)/360.0*DIST_PER_ROTATION_X < x*TILE_SIDE + 1.5 + offset) {}
+			while(MSMMotorEncoder(x_motor1)/360.0*DIST_PER_ROTATION_X < x*TILE_SIDE + 1 + offset) {}
 			MSMotorStop(x_motor1);
 			MSMotorStop(x_motor2);
 			wait1Msec(100);
@@ -118,11 +118,11 @@ void move_x(int x, int offset)
 	}
 	else
 	{
-		while(MSMMotorEncoder(x_motor1)/360.0*DIST_PER_ROTATION_X > x*TILE_SIDE + 2 + offset)
+		while(MSMMotorEncoder(x_motor1)/360.0*DIST_PER_ROTATION_X > x*TILE_SIDE + 1 + offset)
 		{
 			MSMMotor(x_motor1, MOTOR_X_SPEED_NEG);
 			MSMMotor(x_motor2, MOTOR_X_SPEED_NEG);
-			while(MSMMotorEncoder(x_motor1)/360.0*DIST_PER_ROTATION_X > x*TILE_SIDE + 2 + offset) {}
+			while(MSMMotorEncoder(x_motor1)/360.0*DIST_PER_ROTATION_X > x*TILE_SIDE + 1 + offset) {}
 			MSMotorStop(x_motor1);
 			MSMotorStop(x_motor2);
 			wait1Msec(100);
@@ -138,15 +138,15 @@ void move_x(int x, int offset)
  */
 void move_y(int y)
 {
-	if(nMotorEncoder(y_motor)/360.0*DIST_PER_ROTATION_Y > -y*TILE_SIDE - 1.2)
+	if(nMotorEncoder(y_motor)/360.0*DIST_PER_ROTATION_Y > -y*TILE_SIDE)
 	{
 		motor[y_motor] = -MOTOR_Y_SPEED;
-		while(nMotorEncoder(y_motor)/360.0*DIST_PER_ROTATION_Y > -y*TILE_SIDE - 0.7) {}
+		while(nMotorEncoder(y_motor)/360.0*DIST_PER_ROTATION_Y > -y*TILE_SIDE) {}
 	}
 	else
 	{
 		motor[y_motor] = MOTOR_Y_SPEED;
-		while(nMotorEncoder(y_motor)/360.0*DIST_PER_ROTATION_Y < -y*TILE_SIDE - 0.7) {}
+		while(nMotorEncoder(y_motor)/360.0*DIST_PER_ROTATION_Y < -y*TILE_SIDE) {}
 	}
 	motor[y_motor] = 0;
 	wait1Msec(200);
@@ -1159,11 +1159,11 @@ void resetBoard()
  */
 void displaySelection()
 {
-	displayString(1, "Please Enter A Selection Using the Right and Left Arrow Keys");
-	displayString(4, "1. 2 Player");
-	displayString(5, "2. Player Versus AI");
-	displayString(6, "3. Replay Game");
-	displayString(7, "4. Exit Game");
+	displayBigTextLine(1, "Please Enter A Selection Using the Right and Left Arrow Keys");
+	displayBigTextLine(4, "1. 2 Player");
+	displayBigTextLine(6, "2. Player Versus AI");
+	displayBigTextLine(8, "3. Replay Game");
+	displayBigTextLine(10, "4. Exit Game");
 }
 
 /*
@@ -1252,7 +1252,7 @@ int getSelection()
 	displaySelection();
 	int selection = 0;
 
-	displayString(9, "choice -> %d", selection+1);
+	displayString(12, "choice -> %d", selection+1);
 
 	while(!getButtonPress(buttonEnter))
 	{
@@ -1260,13 +1260,13 @@ int getSelection()
 		{
 			while(getButtonPress(buttonLeft)) {}
 			selection = (selection-1+4)%4;
-			displayString(9, "choice -> %d", selection+1);
+			displayString(12, "choice -> %d", selection+1);
 		}
 		if(getButtonPress(buttonRight))
 		{
 			while(getButtonPress(buttonRight)) {}
 			++selection %= 4;
-			displayString(9, "choice -> %d", selection+1);
+			displayString(12, "choice -> %d", selection+1);
 		}
 	}
 	eraseDisplay();
