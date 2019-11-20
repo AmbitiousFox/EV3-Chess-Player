@@ -992,7 +992,7 @@ int checkmate(bool player)
  * Moves a chess piece from (x_start, y_start) to (x_end, y_end).
  * Also takes care of capturing, castling, and promotion.
  */ 
-void movePiece(int x_start, int y_start, int x_end, int y_end)
+void movePieceGame(int x_start, int y_start, int x_end, int y_end)
 {
 	board[x_start][y_start].first_move = false;
 
