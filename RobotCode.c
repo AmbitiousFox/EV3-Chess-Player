@@ -1152,6 +1152,11 @@ void resetBoard()
 
 }
 
+/*
+ * Displays the menu selection.
+ * 
+ * AARON
+ */
 void displaySelection()
 {
 	displayString(1, "Please Enter A Selection Using the Right and Left Arrow Keys");
@@ -1161,6 +1166,11 @@ void displaySelection()
 	displayString(7, "4. Exit Game");
 }
 
+/*
+ * Displays the move selection.
+ * 
+ * AARON
+ */
 void squareSelect(int & x_value, int & y_value)
 {
 	displayString(5, "Select a Square by using the right and left arrows to change the value, and the up and down button to change the value being changed");
@@ -1232,6 +1242,11 @@ void makeMove(int team)
 }
 */
 
+/*
+ * Gets user input from the menu selection.
+ * 
+ * AARON
+ */
 int getSelection()
 {
 	displaySelection();
