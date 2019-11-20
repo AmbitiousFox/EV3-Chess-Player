@@ -246,37 +246,25 @@ void raiseClaw()
 }
 
 /*
- * Removes a piece from the chess board array.
- *
- * ALEX
- */
-void removeFromArray(int x, int y)
-{
-	piece null_piece;
-	null_piece.piece_type = NULL_PIECE;
-	board[x][y] = null_piece;
-}
-
-/*
  * Moves the chess piece from tile (x_start, y_start) to (x_end, y_end).
  *        Claw expects to be open at the start, and remain open at the end.
  * ALEX
  */ // it is decreed that white pieces are on the right side.
-void movePiece(int x_start, int y_start, int x_end, int y_end, piece & currPiece)
+void movePiece(int x_start, int y_start, int x_end, int y_end)
 {
 	calibrate_y();
 	move_y(7);
 	calibrate_x();
 	moveArm(x_start, y_start, 0);
-	lowerClaw(currPiece.extend_dist);
-	closeClaw(currPiece.close_dist);
+	lowerClaw(board[x_start][y_start].extend_dist);
+	closeClaw(board[x_start][y_start].close_dist);
 	raiseClaw();
 	moveArm(x_end, y_end, - 0.8);
-	lowerClaw(currPiece.extend_dist);
+	lowerClaw(board[x_start][y_start].extend_dist);
 	openClaw();
 	raiseClaw();
-	board[x_end][y_end] = currPiece;
-	removeFromArray(x_start, y_start);
+	board[x_end][y_end] = board[x_start][y_start];
+	board[x_start][y_start] = NULL_PIECE;
 }
 
 //subfunction of removePiece()
@@ -976,6 +964,17 @@ void resetBoard()
 		}
 }
 
+void setGame() 
+{
+	for(int column = 0; column < 2; column++)
+	{
+		for(int row = 0; row < 8; row++)
+			movePiece
+	}
+	
+	
+}
+
 void removePiece(int x_value, int y_value)
 {
 	piece current = board[x_value][y_value];
@@ -992,17 +991,15 @@ void removePiece(int x_value, int y_value)
 			//move piece
 		}
 		
-		
-		
 		for(int row = 0; row < 8 && current.colour == BLACK; row++)
-			if(!board[15][y_value].piece_type)
+			if(!board[15][row].piece_type)
 			{
-				//move piece
+				movePiece(x_value, y_value, 15, row)
 			}
 		
 		if(board[14][4].colour == WHITE && !board[14][4].piece_type)
 		{
-			//move piece
+			
 		}
 	}
 	
@@ -1012,7 +1009,7 @@ void removePiece(int x_value, int y_value)
 		{
 			if(!board[2][row].piece_type)
 			{
-				//move piece
+				movePiece(x_value, y_value, 2, row)
 			}
 		}
 		
@@ -1020,7 +1017,7 @@ void removePiece(int x_value, int y_value)
 		{
 			if(!board[13][row].piece_type)
 			{
-				//move piece
+				movePiece(x_value, y_value, 13, row)
 			}
 		}
 	}
@@ -1031,11 +1028,11 @@ void removePiece(int x_value, int y_value)
 		{
 			if(!board[14][0].piece_type)
 			{
-				//move piece
+				movePiece(x_value, y_value, 14, 0)
 			}
 			if(!board[14][7].piece_type)
 			{
-				//move piece
+				movePiece(x_value, y_value, 14, 7)
 			}
 		}
 		
@@ -1043,11 +1040,11 @@ void removePiece(int x_value, int y_value)
 		{
 			if(!board[1][0].piece_type)
 			{
-				//move piece
+				movePiece(x_value, y_value, 1, 0)
 			}
 			if(!board[1][7].piece_type)
 			{
-				//move piece
+				movePiece(x_value, y_value, 1, 7)
 			}
 		}
 	}
@@ -1058,11 +1055,11 @@ void removePiece(int x_value, int y_value)
 		{
 			if(!board[14][1].piece_type)
 			{
-				//move piece
+				movePiece(x_value, y_value, 14, 1)
 			}
 			if(!board[14][6].piece_type)
 			{
-				//move piece
+				movePiece(x_value, y_value, 14, 6)
 			}
 		}
 		
@@ -1070,11 +1067,11 @@ void removePiece(int x_value, int y_value)
 		{
 			if(!board[1][1].piece_type)
 			{
-				//move piece
+				movePiece(x_value, y_value, 1, 1)
 			}
 			if(!board[1][6].piece_type)
 			{
-				//move piece
+				movePiece(x_value, y_value, 1, 6)
 			}
 		}
 	}
@@ -1085,11 +1082,11 @@ void removePiece(int x_value, int y_value)
 		{
 			if(!board[14][2].piece_type)
 			{
-				//move piece
+				movePiece(x_value, y_value, 14, 12)
 			}
 			if(!board[14][5].piece_type)
 			{
-				//move piece
+				movePiece(x_value, y_value, 14, 5)
 			}
 		}
 		
@@ -1097,11 +1094,11 @@ void removePiece(int x_value, int y_value)
 		{
 			if(!board[1][2].piece_type)
 			{
-				//move piece
+				movePiece(x_value, y_value, 1, 2)
 			}
 			if(!board[1][5].piece_type)
 			{
-				//move piece
+				movePiece(x_value, y_value, 1, 5)
 			}
 		}
 	}
@@ -1117,11 +1114,11 @@ void removePiece(int x_value, int y_value)
 		{
 			if(!board[1][1].piece_type)
 			{
-				//move piece
+				movePiece(x_value, y_value, 1, 1)
 			}
 			if(!board[1][6].piece_type)
 			{
-				//move piece
+				movePiece(x_value, y_value, 1, 6)
 			}
 		}
 	}
