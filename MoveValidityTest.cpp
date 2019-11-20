@@ -8,6 +8,8 @@ using namespace std;
 struct piece
 {
 	int piece_type;
+	float extend_dist;
+	float close_dist;
 	bool colour; // true = white, false = black
 	bool  first_move;
 };
@@ -16,13 +18,19 @@ struct piece
 piece board[16][8];
 
 // chess pieces
-const int PAWN = 0;
+const int PAWN = 6;
 const int ROOK = 1;
 const int KNIGHT = 2;
 const int BISHOP = 3;
 const int QUEEN = 4;
 const int KING = 5;
-const int NULL_PIECE = 6;
+const int NULL_PIECE = 0;
+
+const float EXTEND_DIST_Z = 5.2;
+const float QUEEN_EXTEND_DIST = EXTEND_DIST_Z - 1;
+const float QUEEN_CLOSE_DIST = 1;
+const float PAWN_EXTEND_DIST = EXTEND_DIST_Z;
+const float PAWN_CLOSE_DIST = 0;
 
 bool check(bool);
 bool movePieceAndCheck(int, int, int, int, bool, bool);
@@ -152,7 +160,7 @@ void printBoard()
     for (int j = 7; j >= 0; j--)
     {
         cout << j << "  ";
-        for (int i = 0; i < 16; i++)
+        for (int i = 4; i < 12; i++)
         {
             piece temp = board[i][j];
 
@@ -165,7 +173,7 @@ void printBoard()
         cout << endl;
     }
     cout << endl << "   ";
-    for (int i = 0; i < 16; i++)
+    for (int i = 4; i < 12; i++)
         cout << fixed << setw(2) << i << " ";
     
     cout << endl << endl;
@@ -487,6 +495,8 @@ bool movePieceAndCheck(int x_start, int y_start, int x_end, int y_end, bool play
 	board[x_end][y_end] = board[x_start][y_start];
 	board[x_start][y_start] = null_piece;
 
+	bool promotion = false;
+
 	// castling
 	if (castling)
 	{
@@ -508,6 +518,18 @@ bool movePieceAndCheck(int x_start, int y_start, int x_end, int y_end, bool play
 
 			board[9][y_start] = board[11][y_start];
 			board[11][y_start] = temp2;
+		}
+	}
+
+	// promotion
+	else if (board[x_end][y_end].piece_type == PAWN)
+	{
+		if ((player && y_end == 7) || (!player && y_end == 0))
+		{
+			board[x_end][y_end].piece_type = QUEEN;
+			board[x_end][y_end].extend_dist = QUEEN_EXTEND_DIST;
+			board[x_end][y_end].close_dist = QUEEN_CLOSE_DIST;
+			promotion = true;
 		}
 	}
 
@@ -538,6 +560,14 @@ bool movePieceAndCheck(int x_start, int y_start, int x_end, int y_end, bool play
 			board[11][y_start] = board[9][y_start];
 			board[9][y_start] = temp2;
 		}
+	}
+
+	// promotion
+	else if (promotion)
+	{
+		board[x_start][y_start].piece_type = PAWN;
+		board[x_start][y_start].extend_dist = PAWN_EXTEND_DIST;
+		board[x_start][y_start].close_dist = PAWN_CLOSE_DIST;
 	}
 
 	return isCheck;
@@ -784,6 +814,17 @@ void movePiece(int x_start, int y_start, int x_end, int y_end)
 			board[9][y_start] = board[11][y_start];
 			board[11][y_start] = temp2;
 			board[9][y_start].first_move = false;
+		}
+	}
+
+	// promotion
+	else if (board[x_end][y_end].piece_type == PAWN)
+	{
+		if ((board[x_end][y_end].colour && y_end == 7) || (!board[x_end][y_end].colour && y_end == 0))
+		{
+			board[x_end][y_end].piece_type = QUEEN;
+			board[x_end][y_end].extend_dist = QUEEN_EXTEND_DIST;
+			board[x_end][y_end].close_dist = QUEEN_CLOSE_DIST;
 		}
 	}
 }
