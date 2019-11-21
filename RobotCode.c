@@ -5,26 +5,26 @@
 //giving files, we probably dont need to submit open source code, ask carol
 
 /*
- * CHESS BOARD LAYOUT
- *
- * 	The chess board follows a predetermined coordinate system:
- *
- *  x = extra piece tile
- *  + = chess board tile
- *
- *
- * 	7	x	x	x		+	+	+	+	+	+	 +	 +	 		 x	 x	 x
- * 	6	x	x	x		+	+	+	+	+	+	 +	 +	 		 x	 x	 x
- * 	5	x	x	x		+	+	+	+	+	+	 +	 +	 		 x	 x	 x
- * 	4	x	x	x		+	+	+	+	+	+	 +	 +	 		 x	 x	 x
- * 	3	x	x	x		+	+	+	+	+	+	 +	 +	 		 x	 x	 x
- * 	2	x	x	x		+	+	+	+	+	+	 +	 +	 		 x	 x	 x
- * 	1	x	x	x		+	+	+	+	+	+	 +	 +	 		 x	 x	 x
- * 	0	x	x	x		+	+	+	+	+	+	 + 	 +	 		 x	 x	 x
- *
- * 		0	1	2	3	4	5	6	7	8	9	10	11	12	13	14	15
- * 					  a b c d e f  g   h
- */
+* CHESS BOARD LAYOUT
+*
+* 	The chess board follows a predetermined coordinate system:
+*
+*  x = extra piece tile
+*  + = chess board tile
+*
+*
+* 	7	x	x	x		+	+	+	+	+	+	 +	 +	 		 x	 x	 x
+* 	6	x	x	x		+	+	+	+	+	+	 +	 +	 		 x	 x	 x
+* 	5	x	x	x		+	+	+	+	+	+	 +	 +	 		 x	 x	 x
+* 	4	x	x	x		+	+	+	+	+	+	 +	 +	 		 x	 x	 x
+* 	3	x	x	x		+	+	+	+	+	+	 +	 +	 		 x	 x	 x
+* 	2	x	x	x		+	+	+	+	+	+	 +	 +	 		 x	 x	 x
+* 	1	x	x	x		+	+	+	+	+	+	 +	 +	 		 x	 x	 x
+* 	0	x	x	x		+	+	+	+	+	+	 + 	 +	 		 x	 x	 x
+*
+* 		0	1	2	3	4	5	6	7	8	9	10	11	12	13	14	15
+* 					  a b c d e f  g   h
+*/
 
 // it is declared that an empty spot on the chess board is represented by null values
 
@@ -50,19 +50,20 @@ struct piece
 piece board[16][8];
 
 // physical system constants
-const float WHEEL_RADIUS_X = 3.65;
+const float WHEEL_RADIUS_X = 3.8;
 const float WHEEL_RADIUS_Y = 1.9;
 const float TILE_SIDE = 3;
-const float EXTEND_DIST_Z = 5.2;
-const float EXTEND_DIST_CLAW = 2.5;
+const float EXTEND_DIST_Z = 5.5;
+const float EXTEND_DIST_CLAW = 2.6;
 const float DIST_PER_ROTATION_X = WHEEL_RADIUS_X*PI*2/5;
 const float DIST_PER_ROTATION_Y = WHEEL_RADIUS_Y*PI*2;
 const float DIST_PER_ROTATION_Z = 3.6;
 const float DIST_PER_ROTATION_CLAW = 0.5;
+const float X_OFFSET = 0.8;
 
-const float MOTOR_X_SPEED = 60;
-const float MOTOR_X_SPEED_NEG = -60;
-const float MOTOR_Y_SPEED = 60;
+const float MOTOR_X_SPEED = 35;
+const float MOTOR_X_SPEED_NEG = -35;
+const float MOTOR_Y_SPEED = 50;
 const float MOTOR_Z_SPEED = 40;
 
 const float PAWN_EXTEND_DIST = EXTEND_DIST_Z;
@@ -80,13 +81,13 @@ const float KING_CLOSE_DIST = 1.5;
 
 // chess pieces
 
-const piece PAWN = {1, EXTEND_DIST_Z, 0, false};
-const piece ROOK = {2, EXTEND_DIST_Z, 1.5, false};
-const piece KNIGHT = {3, EXTEND_DIST_Z, 0.1, false};
-const piece BISHOP = {4, EXTEND_DIST_Z, 1.2, false};
-const piece QUEEN = {5, EXTEND_DIST_Z, 1, false};
-const piece KING = {6, EXTEND_DIST_Z, 1.5, false};
-const piece NULL_PIECE = {0, 0, 0, false};
+const int PAWN = 1;
+const int ROOK = 2;
+const int KNIGHT = 3;
+const int BISHOP = 4;
+const int QUEEN = 5;
+const int KING = 6;
+const int NULL_PIECE = 0;
 
 const bool WHITE = true;
 const bool BLACK = false;
@@ -101,19 +102,19 @@ const int touch_x = S2;
 const int touch_y = S3
 
 /*
- * Moves the robot in the x direction to column x.
- *
- * CINDY
- */
-void move_x(int x, int offset)
+* Moves the robot in the x direction to column x.
+*
+* CINDY
+*/
+void move_x(int x, float offset)
 {
-	if(MSMMotorEncoder(x_motor1)/360.0*DIST_PER_ROTATION_X < x*TILE_SIDE + 1 + offset)
+	if(MSMMotorEncoder(x_motor1)/360.0*DIST_PER_ROTATION_X < x*TILE_SIDE + X_OFFSET + offset)
 	{
-		while(MSMMotorEncoder(x_motor1)/360.0*DIST_PER_ROTATION_X < x*TILE_SIDE + 1 + offset)
+		while(MSMMotorEncoder(x_motor1)/360.0*DIST_PER_ROTATION_X < x*TILE_SIDE + X_OFFSET + offset)
 		{
 			MSMMotor(x_motor1, MOTOR_X_SPEED);
-			MSMMotor(x_motor2, MOTOR_X_SPEED);
-			while(MSMMotorEncoder(x_motor1)/360.0*DIST_PER_ROTATION_X < x*TILE_SIDE + 1 + offset) {}
+			MSMMotor(x_motor2, MOTOR_X_SPEED+8);
+			while(MSMMotorEncoder(x_motor1)/360.0*DIST_PER_ROTATION_X < x*TILE_SIDE + X_OFFSET + offset) {}
 			MSMotorStop(x_motor1);
 			MSMotorStop(x_motor2);
 			wait1Msec(100);
@@ -121,11 +122,11 @@ void move_x(int x, int offset)
 	}
 	else
 	{
-		while(MSMMotorEncoder(x_motor1)/360.0*DIST_PER_ROTATION_X > x*TILE_SIDE + 1 + offset)
+		while(MSMMotorEncoder(x_motor1)/360.0*DIST_PER_ROTATION_X > x*TILE_SIDE + X_OFFSET + offset)
 		{
 			MSMMotor(x_motor1, MOTOR_X_SPEED_NEG);
-			MSMMotor(x_motor2, MOTOR_X_SPEED_NEG);
-			while(MSMMotorEncoder(x_motor1)/360.0*DIST_PER_ROTATION_X > x*TILE_SIDE + 1 + offset) {}
+			MSMMotor(x_motor2, MOTOR_X_SPEED_NEG+8);
+			while(MSMMotorEncoder(x_motor1)/360.0*DIST_PER_ROTATION_X > x*TILE_SIDE + X_OFFSET + offset) {}
 			MSMotorStop(x_motor1);
 			MSMotorStop(x_motor2);
 			wait1Msec(100);
@@ -135,31 +136,31 @@ void move_x(int x, int offset)
 }
 
 /*
- * Moves the robot in the y direction to row y.
- *
- * CINDY
- */
+* Moves the robot in the y direction to row y.
+*
+* CINDY
+*/
 void move_y(int y)
 {
-	if(nMotorEncoder(y_motor)/360.0*DIST_PER_ROTATION_Y > -y*TILE_SIDE)
+	if(nMotorEncoder(y_motor)/360.0*DIST_PER_ROTATION_Y > -y*TILE_SIDE*1.0)
 	{
 		motor[y_motor] = -MOTOR_Y_SPEED;
-		while(nMotorEncoder(y_motor)/360.0*DIST_PER_ROTATION_Y > -y*TILE_SIDE) {}
+		while(nMotorEncoder(y_motor)/360.0*DIST_PER_ROTATION_Y > -y*TILE_SIDE*1.0) {}
 	}
 	else
 	{
 		motor[y_motor] = MOTOR_Y_SPEED;
-		while(nMotorEncoder(y_motor)/360.0*DIST_PER_ROTATION_Y < -y*TILE_SIDE) {}
+		while(nMotorEncoder(y_motor)/360.0*DIST_PER_ROTATION_Y < -y*TILE_SIDE*1.0) {}
 	}
 	motor[y_motor] = 0;
 	wait1Msec(200);
 }
 
 /*
- * Calibrates the x direction movement.
- *
- * CINDY
- */
+* Calibrates the x direction movement.
+*
+* CINDY
+*/
 void calibrate_x()
 {
 	MSMMotor(x_motor1, MOTOR_X_SPEED_NEG);
@@ -173,10 +174,10 @@ void calibrate_x()
 }
 
 /*
- * Calibrates the y direction movement.
- *
- * CINDY
- */
+* Calibrates the y direction movement.
+*
+* CINDY
+*/
 void calibrate_y()
 {
 	motor[y_motor] = MOTOR_Y_SPEED;
@@ -187,22 +188,23 @@ void calibrate_y()
 }
 
 /*
- * Moves the robot to the tile (x,y).
- *
- * CINDY
- */
+* Moves the robot to the tile (x,y).
+*
+* CINDY
+*/
 void moveArm(int x, int y, int offset_x)
 {
+	calibrate_x();
 	move_x(x, offset_x);
 	calibrate_y();
 	move_y(y);
 }
 
 /*
- * Closes the claw.
- *
- * CINDY
- */
+* Closes the claw.
+*
+* CINDY
+*/
 void closeClaw(int dist)
 {
 	motor[claw_motor] = -100;
@@ -212,10 +214,10 @@ void closeClaw(int dist)
 }
 
 /*
- * Opens the claw.
- *
- * CINDY
- */
+* Opens the claw.
+*
+* CINDY
+*/
 void openClaw()
 {
 	motor[claw_motor] = 100;
@@ -225,10 +227,10 @@ void openClaw()
 }
 
 /*
- * Lowers the claw.
- *
- * CINDY
- */
+* Lowers the claw.
+*
+* CINDY
+*/
 void lowerClaw(int dist)
 {
 	motor[z_motor] = -MOTOR_Z_SPEED;
@@ -238,10 +240,10 @@ void lowerClaw(int dist)
 }
 
 /*
- * Raises the claw.
- *
- * CINDY
- */
+* Raises the claw.
+*
+* CINDY
+*/
 void raiseClaw()
 {
 	motor[z_motor] = MOTOR_Z_SPEED;
@@ -252,15 +254,37 @@ void raiseClaw()
 }
 
 /*
- * Moves the chess piece from tile (x_start, y_start) to (x_end, y_end).
- *        Claw expects to be open at the start, and remain open at the end.
- * ALEX
- */ // it is decreed that white pieces are on the right side.
+* Moves a chess piece from (x_start, y_start) to (x_end, y_end).
+* Also takes care of capturing, castling, and promotion.
+*/
+void movePieceGame(int x_start, int y_start, int x_end, int y_end)
+{
+	int this_piece_type = board[x_start][y_start].piece_type;
+	int this_extend_dist = board[x_start][y_start].extend_dist;
+	int this_close_dist = board[x_start][y_start].close_dist;
+	bool this_colour = board[x_start][y_start].colour;
+
+	board[x_start][y_start].piece_type = board[x_end][y_end].piece_type;
+	board[x_start][y_start].extend_dist = board[x_end][y_end].extend_dist;
+	board[x_start][y_start].close_dist = board[x_end][y_end].close_dist;
+	board[x_start][y_start].colour = board[x_end][y_end].colour;
+
+	board[x_end][y_end].piece_type = this_piece_type;
+	board[x_end][y_end].extend_dist = this_extend_dist;
+	board[x_end][y_end].close_dist = this_close_dist;
+	board[x_end][y_end].colour = this_colour;
+}
+
+/*
+* Moves the chess piece from tile (x_start, y_start) to (x_end, y_end).
+* Claw expects to be open at the start, and remain open at the end.
+
+* ALEX
+*/ // it is decreed that white pieces are on the right side.
 void movePiece(int x_start, int y_start, int x_end, int y_end)
 {
 	calibrate_y();
 	move_y(7);
-	calibrate_x();
 	moveArm(x_start, y_start, 0);
 	lowerClaw(board[x_start][y_start].extend_dist);
 	closeClaw(board[x_start][y_start].close_dist);
@@ -269,18 +293,16 @@ void movePiece(int x_start, int y_start, int x_end, int y_end)
 	lowerClaw(board[x_start][y_start].extend_dist);
 	openClaw();
 	raiseClaw();
-	board[x_end][y_end] = board[x_start][y_start];
-	board[x_start][y_start] = NULL_PIECE;
+	movePieceGame(x_start, y_start, x_end, y_end);
 }
 
 //subfunction of removePiece()
-void holdingSpot(piece & currPiece, int & x, int & y,
- 	int pawnColumn, int pieceColumn, int queenColumn)
+void holdingSpot(int piece_type, int & x, int & y, int pawnColumn, int pieceColumn, int queenColumn)
 {
 	// look through the array of it's type, find the last available location for it
-	if(currPiece.piece_type == PAWN)
+	if(piece_type == PAWN)
 	{
-		for (int row = 0; row <= 7; row++)// search pawnColumn
+		for (int row = 7; row >= 0; row--)// search pawnColumn
 		{
 			if(board[pawnColumn][row].piece_type == NULL_PIECE)
 			{
@@ -289,7 +311,7 @@ void holdingSpot(piece & currPiece, int & x, int & y,
 			}
 		}
 	}
-	else if(currPiece.piece_type == ROOK)
+	else if(piece_type == ROOK)
 	{
 		if(board[pieceColumn][0].piece_type == NULL_PIECE)
 		{
@@ -302,7 +324,7 @@ void holdingSpot(piece & currPiece, int & x, int & y,
 			y = 7;
 		}
 	}
-	else if(currPiece.piece_type == KNIGHT)
+	else if(piece_type == KNIGHT)
 	{
 		if(board[pieceColumn][1].piece_type == NULL_PIECE)
 		{
@@ -315,7 +337,7 @@ void holdingSpot(piece & currPiece, int & x, int & y,
 			y = 6;
 		}
 	}
-	else if(currPiece.piece_type == BISHOP)
+	else if(piece_type == BISHOP)
 	{
 		if(board[pieceColumn][2].piece_type == NULL_PIECE)
 		{
@@ -328,7 +350,7 @@ void holdingSpot(piece & currPiece, int & x, int & y,
 			y = 5;
 		}
 	}
-	else if(currPiece.piece_type == QUEEN)
+	else if(piece_type == QUEEN)
 	{
 		if(board[pieceColumn][3].piece_type == NULL_PIECE)
 		{
@@ -337,7 +359,7 @@ void holdingSpot(piece & currPiece, int & x, int & y,
 		}
 		else
 		{
-			for (int row = 0; row <= 7; row++)  // search queenColumn
+			for (int row = 7; row >= 0; row--)  // search queenColumn
 			{
 				if(board[queenColumn][row].piece_type == NULL_PIECE)
 				{
@@ -350,42 +372,79 @@ void holdingSpot(piece & currPiece, int & x, int & y,
 }
 
 /*
- * Removes the chess piece at tile (x, y) and places it at the correct location.
- *
- * ALEX
- */
-void removePiece(int x, int y, piece & currPiece)
+* Removes the chess piece at tile (x, y) and places it at the correct location.
+*
+* ALEX
+*/
+void removePiece(int x, int y, int piece_type, bool colour)
 {
 	int endx = 0, endy = 0; // endpoint of piece
 
-	if(currPiece.colour)// find if piece is white
+	if(colour)// find if piece is white
 	{
 		//search columns 13-15
-		holdingSpot(currPiece, endx, endy, 13, 14, 15);
+		holdingSpot(piece_type, endx, endy, 13, 14, 15);
 	}
 	else
 	{
 		//search columns 0-2
-		holdingSpot(currPiece, endx, endy, 2, 1, 0);
+		holdingSpot(piece_type, endx, endy, 2, 1, 0);
 	}
 	movePiece(x, y, endx, endy);
 }
 
+/*
+* Displays invalid input message.
+*
+* AARON
+*/
 void invalidInputMessage()
 {
-	displayString(3, "INVALID MOVE, PLEASE TRY AGAIN.")
-	displayString(5, "Press any button..")
+	eraseDisplay();
+	displayBigTextLine(3, "INVALID MOVE")
+	displayBigTextLine(5, "Press any")
+	displayBigTextLine(7, "button...");
 	while(!getButtonPress(buttonAny)) {}
-	displayString(3, "");
-	displayString(5, "");
+	while(getButtonPress(buttonAny)) {}
+	eraseDisplay();
 }
 
 /*
- * Checks whether the chess move of the piece at (x_start, y_start) to (x_end, y_end)
- * is valid.
- *
- * AARON
- */
+* Displays win message.
+*
+* CINDY
+*/
+void displayWinMessage(int winner)
+{
+	eraseDisplay();
+	if (winner == 0)
+	{
+		displayBigTextLine(3, "CHECKMATE!");
+		displayBigTextLine(5, "WHITE WINS!")
+	}
+	else if (winner == 1)
+	{
+		displayBigTextLine(3, "CHECKMATE!");
+		displayBigTextLine(5, "BLACK WINS!")
+	}
+	else
+		displayBigTextLine(3, "STALEMATE!");
+
+	displayBigTextLine(7, "Press any");
+	displayBigTextLine(9, "button...");
+
+	while(!getButtonPress(buttonAny)) {}
+	while(getButtonPress(buttonAny)) {}
+
+	eraseDisplay();
+}
+
+/*
+* Checks whether the chess move of the piece at (x_start, y_start) to (x_end, y_end)
+* is valid.
+*
+* AARON
+*/
 bool moveIsValid(int x_start, int y_start, int x_end, int y_end, bool player, bool checkForCheck)
 {
 	// check that start and end are valid tiles
@@ -395,8 +454,10 @@ bool moveIsValid(int x_start, int y_start, int x_end, int y_end, bool player, bo
 	// check that start and end are not the same tile
 	if (x_start == x_end && y_start == y_end)
 		return false;
-	
-	piece curr_piece = board[x_start][y_start];
+
+	piece curr_piece;
+	curr_piece.piece_type = board[x_start][y_start].piece_type;
+	curr_piece.colour = board[x_start][y_start].colour;
 
 	// check that piece at start tile is owned by the player
 	if (curr_piece.piece_type == NULL_PIECE || curr_piece.colour != player)
@@ -415,15 +476,15 @@ bool moveIsValid(int x_start, int y_start, int x_end, int y_end, bool player, bo
 			// move 1
 			if (x_start == x_end && y_end - y_start == 1 && board[x_end][y_end].piece_type == NULL_PIECE)
 				return !checkForCheck || !(movePieceAndCheck(x_start, y_start, x_end, y_end, player, false));
-			
+
 			// move 2
 			else if (x_start == x_end && y_end - y_start == 2 && board[x_end][y_end-1].piece_type == NULL_PIECE && board[x_end][y_end].piece_type == NULL_PIECE && curr_piece.first_move)
 				return !checkForCheck || !(movePieceAndCheck(x_start, y_start, x_end, y_end, player, false));
-			
+
 			// capture
-			else if (abs(x_start - x_end) == 1 && y_end - y_start == 1 && board[x_end][y_end].piece_type != NULL_PIECE && board[x_end][y_end].colour != player)
+			else if (abs(x_start - x_end) == 1 && y_end - y_start == 1 && board[x_end][y_end].piece_type != NULL_PIECE)
 				return !checkForCheck || !(movePieceAndCheck(x_start, y_start, x_end, y_end, player, false));
-			
+
 			else
 				return false;
 		}
@@ -432,17 +493,17 @@ bool moveIsValid(int x_start, int y_start, int x_end, int y_end, bool player, bo
 		else
 		{
 			// move
-			if (x_start == x_end && y_start - y_end == 1 && board[x_end][y_end].piece_type == NULL_PIECE) 
+			if (x_start == x_end && y_start - y_end == 1 && board[x_end][y_end].piece_type == NULL_PIECE)
 				return !checkForCheck || !(movePieceAndCheck(x_start, y_start, x_end, y_end, player, false));
 
 			// move 2
 			else if (x_start == x_end && y_start - y_end == 2 && board[x_end][y_end+1].piece_type == NULL_PIECE && board[x_end][y_end].piece_type == NULL_PIECE && curr_piece.first_move)
 				return !checkForCheck || !(movePieceAndCheck(x_start, y_start, x_end, y_end, player, false));
-			
+
 			// capture
-			else if (abs(x_start - x_end) == 1 && y_start - y_end == 1 && board[x_end][y_end].piece_type != NULL_PIECE && board[x_end][y_end].colour != player)
+			else if (abs(x_start - x_end) == 1 && y_start - y_end == 1 && board[x_end][y_end].piece_type != NULL_PIECE)
 				return !checkForCheck || !(movePieceAndCheck(x_start, y_start, x_end, y_end, player, false));
-			
+
 			else
 				return false;
 		}
@@ -450,7 +511,7 @@ bool moveIsValid(int x_start, int y_start, int x_end, int y_end, bool player, bo
 
 	// ROOK
 	else if (curr_piece.piece_type == ROOK)
-	{		
+	{
 		// vertical
 		if (x_start == x_end)
 		{
@@ -459,7 +520,7 @@ bool moveIsValid(int x_start, int y_start, int x_end, int y_end, bool player, bo
 			{
 				for (int row = y_start+1; row < y_end; row++)
 					if (board[x_end][row].piece_type != NULL_PIECE)
-						return false;
+					return false;
 			}
 
 			// down
@@ -467,10 +528,10 @@ bool moveIsValid(int x_start, int y_start, int x_end, int y_end, bool player, bo
 			{
 				for (int row = y_start-1; row > y_end; row--)
 					if (board[x_end][row].piece_type != NULL_PIECE)
-						return false;
-			}	
+					return false;
+			}
 
-			return !checkForCheck || !(movePieceAndCheck(x_start, y_start, x_end, y_end, player, false));		
+			return !checkForCheck || !(movePieceAndCheck(x_start, y_start, x_end, y_end, player, false));
 		}
 
 		// horizontal
@@ -481,7 +542,7 @@ bool moveIsValid(int x_start, int y_start, int x_end, int y_end, bool player, bo
 			{
 				for (int col = x_start-1; col > x_end; col--)
 					if (board[col][y_end].piece_type != NULL_PIECE)
-						return false;
+					return false;
 			}
 
 			// right
@@ -489,9 +550,9 @@ bool moveIsValid(int x_start, int y_start, int x_end, int y_end, bool player, bo
 			{
 				for (int col = x_start+1; col < x_end; col++)
 					if (board[col][y_end].piece_type != NULL_PIECE)
-						return false;
+					return false;
 			}
-			
+
 			return !checkForCheck || !(movePieceAndCheck(x_start, y_start, x_end, y_end, player, false));
 		}
 
@@ -536,7 +597,7 @@ bool moveIsValid(int x_start, int y_start, int x_end, int y_end, bool player, bo
 					return false;
 			}
 		}
-		
+
 		return !checkForCheck || !(movePieceAndCheck(x_start, y_start, x_end, y_end, player, false));
 	}
 
@@ -544,7 +605,7 @@ bool moveIsValid(int x_start, int y_start, int x_end, int y_end, bool player, bo
 	else if (curr_piece.piece_type == QUEEN)
 	{
 		// rook style movement
-		
+
 		// vertical
 		if (x_start == x_end)
 		{
@@ -553,7 +614,7 @@ bool moveIsValid(int x_start, int y_start, int x_end, int y_end, bool player, bo
 			{
 				for (int row = y_start+1; row < y_end; row++)
 					if (board[x_end][row].piece_type != NULL_PIECE)
-						return false;
+					return false;
 			}
 
 			// down
@@ -561,10 +622,10 @@ bool moveIsValid(int x_start, int y_start, int x_end, int y_end, bool player, bo
 			{
 				for (int row = y_start-1; row > y_end; row--)
 					if (board[x_end][row].piece_type != NULL_PIECE)
-						return false;
-			}	
+					return false;
+			}
 
-			return !checkForCheck || !(movePieceAndCheck(x_start, y_start, x_end, y_end, player, false));		
+			return !checkForCheck || !(movePieceAndCheck(x_start, y_start, x_end, y_end, player, false));
 		}
 
 		// horizontal
@@ -575,7 +636,7 @@ bool moveIsValid(int x_start, int y_start, int x_end, int y_end, bool player, bo
 			{
 				for (int col = x_start-1; col > x_end; col--)
 					if (board[col][y_end].piece_type != NULL_PIECE)
-						return false;
+					return false;
 			}
 
 			// right
@@ -583,11 +644,11 @@ bool moveIsValid(int x_start, int y_start, int x_end, int y_end, bool player, bo
 			{
 				for (int col = x_start+1; col < x_end; col++)
 					if (board[col][y_end].piece_type != NULL_PIECE)
-						return false;
+					return false;
 			}
-			
+
 			return !checkForCheck || !(movePieceAndCheck(x_start, y_start, x_end, y_end, player, false));
-		}	
+		}
 
 		// bishop style movement
 
@@ -618,7 +679,7 @@ bool moveIsValid(int x_start, int y_start, int x_end, int y_end, bool player, bo
 					return false;
 			}
 		}
-		
+
 		return !checkForCheck || !(movePieceAndCheck(x_start, y_start, x_end, y_end, player, false));
 	}
 
@@ -637,7 +698,7 @@ bool moveIsValid(int x_start, int y_start, int x_end, int y_end, bool player, bo
 			{
 				for (int col = x_start+1; col < 11; col++)
 					if (board[col][y_start].piece_type != NULL_PIECE)
-						return false;
+					return false;
 				return !checkForCheck || !(movePieceAndCheck(x_start, y_start, x_end, y_end, player, true));
 			}
 
@@ -646,20 +707,20 @@ bool moveIsValid(int x_start, int y_start, int x_end, int y_end, bool player, bo
 			{
 				for (int col = 5; col < x_start; col++)
 					if (board[col][y_start].piece_type != NULL_PIECE)
-						return false;
+					return false;
 				return !checkForCheck || !(movePieceAndCheck(x_start, y_start, x_end, y_end, player, true));
 			}
 		}
-		
+
 		return false;
 	}
 }
 
 /*
- * Checks whether the player is in check.
- *
- * CINDY
- */
+* Checks whether the player is in check.
+*
+* CINDY
+*/
 bool check(bool player)
 {
 	// find location of player's king
@@ -675,32 +736,32 @@ bool check(bool player)
 			}
 		}
 	}
-  
+
 	// for each of opponent's pieces, check if that piece can capture the king
 	for (int x = 4; x <= 11; x++)
 		for (int y = 0; y < 8; y++)
-			if (board[x][y].piece_type != NULL_PIECE && board[x][y].colour != player && moveIsValid(x, y, x_king, y_king, !player, false))
-				return true;
+		if (board[x][y].piece_type != NULL_PIECE && board[x][y].colour != player && moveIsValid(x, y, x_king, y_king, !player, false))
+		return true;
 
 	return false;
 }
 
 /*
- * Helper function for checkmate algorithm.
- *
- * CINDY
- */
+* Helper function for checkmate algorithm.
+*
+* CINDY
+*/
 bool movePieceAndCheck(int x_start, int y_start, int x_end, int y_end, bool player, bool castling)
 {
-    bool isCheck = true;
+	bool isCheck = true;
 
-	piece temp;
-	temp = board[x_end][y_end];
-	piece null_piece;
-	null_piece.piece_type = NULL;
+	int temp_piece_type = board[x_end][y_end].piece_type;
+	int temp_colour = board[x_end][y_end].colour;
 
-	board[x_end][y_end] = board[x_start][y_start];
-	board[x_start][y_start] = null_piece;
+	board[x_end][y_end].piece_type = board[x_start][y_start].piece_type;
+	board[x_end][y_end].colour = board[x_start][y_start].colour;
+
+	board[x_start][y_start].piece_type = NULL_PIECE;
 
 	bool promotion = false;
 
@@ -711,7 +772,7 @@ bool movePieceAndCheck(int x_start, int y_start, int x_end, int y_end, bool play
 		if (x_start - x_end == 2)
 		{
 			piece temp2;
-    		temp2.piece_type = NULL_PIECE;
+			temp2.piece_type = NULL_PIECE;
 
 			board[7][y_start] = board[4][y_start];
 			board[4][y_start] = temp2;
@@ -721,7 +782,7 @@ bool movePieceAndCheck(int x_start, int y_start, int x_end, int y_end, bool play
 		else if (x_end - x_start == 2)
 		{
 			piece temp2;
-    		temp2.piece_type = NULL_PIECE;
+			temp2.piece_type = NULL_PIECE;
 
 			board[9][y_start] = board[11][y_start];
 			board[11][y_start] = temp2;
@@ -743,8 +804,11 @@ bool movePieceAndCheck(int x_start, int y_start, int x_end, int y_end, bool play
 	if (!check(player))
 		isCheck = false;
 
-	board[x_start][y_start] = board[x_end][y_end];
-	board[x_end][y_end] = temp;
+	board[x_start][y_start].piece_type = board[x_end][y_end].piece_type;
+	board[x_start][y_start].colour = board[x_end][y_end].colour;
+
+	board[x_end][y_end].piece_type = temp_piece_type;
+	board[x_end][y_end].colour = temp_colour;
 
 	if (castling)
 	{
@@ -752,7 +816,7 @@ bool movePieceAndCheck(int x_start, int y_start, int x_end, int y_end, bool play
 		if (x_start - x_end == 2)
 		{
 			piece temp2;
-    		temp2.piece_type = NULL_PIECE;
+			temp2.piece_type = NULL_PIECE;
 
 			board[4][y_start] = board[7][y_start];
 			board[7][y_start] = temp2;
@@ -762,7 +826,7 @@ bool movePieceAndCheck(int x_start, int y_start, int x_end, int y_end, bool play
 		else if (x_end - x_start == 2)
 		{
 			piece temp2;
-    		temp2.piece_type = NULL_PIECE;
+			temp2.piece_type = NULL_PIECE;
 
 			board[11][y_start] = board[9][y_start];
 			board[9][y_start] = temp2;
@@ -781,10 +845,10 @@ bool movePieceAndCheck(int x_start, int y_start, int x_end, int y_end, bool play
 }
 
 /*
- * Helper function for checkmate algorithm. (BRUTE FORCE ALGORITHM)
- *
- * CINDY
- */
+* Helper function for checkmate algorithm. (BRUTE FORCE ALGORITHM)
+*
+* CINDY
+*/
 bool canRelieveCheck(bool player)
 {
 	// for every possible move the player can make, check if it
@@ -815,9 +879,9 @@ bool canRelieveCheck(bool player)
 
 						// capture
 						if (x > 4 && moveIsValid(x, y, x-1, y+1, player, true))
-								return true;
+							return true;
 						if (x < 11 && moveIsValid(x, y, x+1, y+1, player, true))
-								return true;
+							return true;
 					}
 
 					// black
@@ -834,9 +898,9 @@ bool canRelieveCheck(bool player)
 
 						// capture
 						if (x > 4 && moveIsValid(x, y, x-1, y-1, player, true))
-								return true;
+							return true;
 						if (x < 11 && moveIsValid(x, y, x+1, y-1, player, true))
-								return true;
+							return true;
 					}
 				}
 
@@ -846,22 +910,22 @@ bool canRelieveCheck(bool player)
 					// right
 					for (int x_end = x+1; x_end < 12; x_end++)
 						if (moveIsValid(x, y, x_end, y, player, true))
-							return true;
+						return true;
 
 					// left
 					for (int x_end = x-1; x_end >= 4; x_end--)
 						if (moveIsValid(x, y, x_end, y, player, true))
-							return true;
+						return true;
 
 					// up
 					for (int y_end = y+1; y_end < 12; y_end++)
 						if (moveIsValid(x, y, x, y_end, player, true))
-							return true;
+						return true;
 
 					// down
 					for (int y_end = y-1; y_end >= 4; y_end--)
 						if (moveIsValid(x, y, x, y_end, player, true))
-							return true;
+						return true;
 				}
 
 				// KNIGHT
@@ -960,11 +1024,11 @@ bool canRelieveCheck(bool player)
 }
 
 /*
- * Checks whether the player is in check (1), checkmate (2), or stalemate (3).
- * Returns 0 otherwise.
- *
- * CINDY
- */
+* Checks whether the player is in check (1), checkmate (2), or stalemate (3).
+* Returns 0 otherwise.
+*
+* CINDY
+*/
 int checkmate(bool player)
 {
 	bool relieveCheck = canRelieveCheck(player);
@@ -988,73 +1052,19 @@ int checkmate(bool player)
 	}
 }
 
-
-
 /*
- * Moves a chess piece from (x_start, y_start) to (x_end, y_end).
- * Also takes care of capturing, castling, and promotion.
- */ 
-void movePieceGame(int x_start, int y_start, int x_end, int y_end)
-{
-	board[x_start][y_start].first_move = false;
-
-    piece temp;
-    temp.piece_type = NULL_PIECE;
-
-    board[x_end][y_end] = board[x_start][y_start];
-    board[x_start][y_start] = temp;
-
-	// castling
-	if (board[x_end][y_end].piece_type == KING)
-	{
-		// queenside
-		if (x_start - x_end == 2)
-		{
-			piece temp2;
-    		temp2.piece_type = NULL_PIECE;
-
-			board[7][y_start] = board[4][y_start];
-			board[4][y_start] = temp2;
-			board[7][y_start].first_move = false;
-		}
-
-		// kingside
-		else if (x_end - x_start == 2)
-		{
-			piece temp2;
-    		temp2.piece_type = NULL_PIECE;
-
-			board[9][y_start] = board[11][y_start];
-			board[11][y_start] = temp2;
-			board[9][y_start].first_move = false;
-		}
-	}
-
-	// promotion
-	else if (board[x_end][y_end].piece_type == PAWN)
-	{
-		if ((board[x_end][y_end].colour && y_end == 7) || (!board[x_end][y_end].colour && y_end == 0))
-		{
-			board[x_end][y_end].piece_type = QUEEN;
-			board[x_end][y_end].extend_dist = QUEEN_EXTEND_DIST;
-			board[x_end][y_end].close_dist = QUEEN_CLOSE_DIST;
-		}
-	}
-}
-
-/*
- * Returns the corresponding x coordinate to a letter.
- * A = 4
- * B = 5
- * C = 6
- * D = 7
- * E = 8
- * F = 9
- * G = 10
- * H = 11
- *
- * CINDY
- */
+* Returns the corresponding x coordinate to a letter.
+* A = 4
+* B = 5
+* C = 6
+* D = 7
+* E = 8
+* F = 9
+* G = 10
+* H = 11
+*
+* CINDY
+*/
 int x_coord(char letter)
 {
 	if (letter == 'A')
@@ -1078,10 +1088,10 @@ int x_coord(char letter)
 }
 
 /*
- * Records the chess move to a file.
- *
- * HANK
- */
+* Records the chess move to a file.
+*
+* HANK
+*/
 void recordMove(TFileHandle fout, int x_start, int y_start, int x_end, int y_end)
 {
 	writeLongPC(fout, x_start);
@@ -1095,10 +1105,10 @@ void recordMove(TFileHandle fout, int x_start, int y_start, int x_end, int y_end
 }
 
 /*
- * Reads a chess move from a file.
- *
- * HANK
- */
+* Reads a chess move from a file.
+*
+* HANK
+*/
 void readMove(TFileHandle fin, int & x_start, int & y_start, int & x_end, int & y_end)
 {
 	readIntPC(fin, x_start);
@@ -1108,60 +1118,62 @@ void readMove(TFileHandle fin, int & x_start, int & y_start, int & x_end, int & 
 }
 
 /*
- * Idk how this function works...
- *
- * HANK
- */
+* Idk how this function works...
+*
+* HANK
+*/
 void gameList()
 {
 	// TO DO
 }
 
 /*
- * Idk how this function works...
- *
- * HANK
- */
+* Idk how this function works...
+*
+* HANK
+*/
 void addGame()
 {
 	// TO DO
 }
 
 /*
- *
- *
- *  Alex
- *
- */
+*
+*
+*  Alex
+*
+*/
 
 /*
- * Displays the menu selection.
- * 
- * AARON
- */
+* Displays the menu selection.
+*
+* AARON
+*/
 void displaySelection()
 {
-	displayBigTextLine(1, "Please Enter A Selection Using the Right and Left Arrow Keys");
+	displayBigTextLine(1, "Select mode:");
 	displayBigTextLine(4, "1. 2 Player");
-	displayBigTextLine(6, "2. Player Versus AI");
+	displayBigTextLine(6, "2. Player vs AI");
 	displayBigTextLine(8, "3. Replay Game");
 	displayBigTextLine(10, "4. Exit Game");
 }
 
 /*
- * Displays the move selection.
- * 
- * AARON
- */
+* Displays the move selection.
+*
+* AARON
+*/
 void squareSelect(int & x_value, int & y_value)
 {
-	displayString(5, "Select a Square by using the right and left arrows to change the value, and the up and down button to change the value being changed");
-	displayString(7, "%c%d", (x_value+'A'), y_value+1);
+	displayBigTextLine(6, "%c%d", (x_value+'A'), y_value+1);
 
 	bool y_selection = false;
 	while(!getButtonPress(buttonEnter)){
 		if(getButtonPress(buttonUp) || getButtonPress(buttonDown))
+		{
+			while (getButtonPress(buttonAny)) {}
 			y_selection = !y_selection;
+		}
 		if(getButtonPress(buttonRight))
 		{
 			while(getButtonPress(buttonRight)) {}
@@ -1169,6 +1181,7 @@ void squareSelect(int & x_value, int & y_value)
 				++y_value %= 8;
 			else
 				++x_value %= 8;
+			displayBigTextLine(6, "%c%d", (x_value+'A'), y_value+1);
 		}
 		if(getButtonPress(buttonLeft))
 		{
@@ -1177,64 +1190,89 @@ void squareSelect(int & x_value, int & y_value)
 				y_value = (y_value-1+8)%8;
 			else
 				x_value = (x_value-1+8)%8;
+			displayBigTextLine(6, "%c%d", (x_value+'A'), y_value+1);
 		}
 	}
-	displayString(5, "");
-	displayString(7, "");
+	while(getButtonPress(buttonEnter)) {}
+	eraseDisplay();
 }
-/*
-void makeMove(int team)
-{
-	if(team)
-		displayString(1, "Player 1's Move");
-	else
-		displayString(1, "Player 2's Move");
 
+void makeMove(bool team)
+{
 	int init_x = 0, init_y = 0, final_x = 0, final_y = 0;
 
 	do
 	{
-
-		while(chess_board[init_x, init_y].white) != team)
+		do
 		{
-			displayString(3, "Please enter your initial move.");
+			if (team)
+				displayBigTextLine(1, "Player 1's Move");
+			else
+				displayBigTextLine(1, "Player 2's Move");
+
+			displayBigTextLine(4, "Enter start:");
 			squareSelect(init_x, init_y);
-			displayString(3, "");
-
-			if(getTeam(init_x, init_y) != team)
-				invalidInputMessage();
-		}
-
-		while(!isMoveValid(init_x, init_y, final_x, final_y, team))
-		{
-			displayString(3, "Please enter where you want to move this piece");
-			displayString(4, "If you want to go back, press the same square");
-			squareSelect(final_x, final_y);
-			displayString(3, "");
 			displayString(4, "");
 
-			if(!isMoveValid(init_x, init_y, final_x, final_y, team))
+			if(board[init_x+4][init_y].piece_type == NULL_PIECE || board[init_x+4][init_y].colour != team)
 				invalidInputMessage();
-		}
-	}while(getTeam(init_x, init_y) != team && !isMoveValid(init_x, init_y, final_x, final_y, team) && (init_x != final_x || init_y != final_y));
 
-	movePiece(init_x, init_y, final_x, final_y);
+		} while(board[init_x+4][init_y].piece_type == NULL_PIECE || board[init_x+4][init_y].colour != team);
 
-	displayString(1, "");
+		if (team)
+			displayBigTextLine(1, "Player 1's Move");
+		else
+			displayBigTextLine(1, "Player 2's Move");
+
+		displayBigTextLine(4, "Enter end:");
+		squareSelect(final_x, final_y);
+		displayBigTextLine(4, "");
+
+		if(!moveIsValid(init_x+4, init_y, final_x+4, final_y, team, true))
+			invalidInputMessage();
+
+	} while(!moveIsValid(init_x+4, init_y, final_x+4, final_y, team, true));
+
+	eraseDisplay();
+	displayBigTextLine(1, "MOVE EXECUTED");
+
+	// capture
+	if (board[final_x+4][final_y].piece_type != NULL_PIECE)
+		removePiece(final_x+4, final_y, board[final_x+4][final_y].piece_type, board[final_x+4][final_y].colour);
+
+	// castling
+	else if (board[init_x+4][init_y].piece_type == KING && abs(init_x - final_x) == 2)
+	{
+		// queenside
+		if (init_x > final_x)
+			movePiece(init_x, init_y, final_x+1, final_y);
+
+		// kingside
+		else
+			movePiece(init_x+7, init_y, final_x+3, final_y);
+	}
+
+	// promotion
+	else if (board[init_x+4][init_y].piece_type == PAWN)
+	{
+		if ((board[init_x+4][init_y].colour && final_y == 7) || (!board[init_x+4][init_y].colour && final_y == 0))
+			removePiece(final_x+4, final_y, PAWN, board[final_x+4][final_y].colour)
+	}
+
+	movePiece(init_x+4, init_y, final_x+4, final_y);
 }
-*/
 
 /*
- * Gets user input from the menu selection.
- * 
- * AARON
- */
+* Gets user input from the menu selection.
+*
+* AARON
+*/
 int getSelection()
 {
 	displaySelection();
 	int selection = 0;
 
-	displayString(12, "choice -> %d", selection+1);
+	displayBigTextLine(13, "Choice -> %d", selection+1);
 
 	while(!getButtonPress(buttonEnter))
 	{
@@ -1242,284 +1280,234 @@ int getSelection()
 		{
 			while(getButtonPress(buttonLeft)) {}
 			selection = (selection-1+4)%4;
-			displayString(12, "choice -> %d", selection+1);
+			displayBigTextLine(13, "Choice -> %d", selection+1);
 		}
 		if(getButtonPress(buttonRight))
 		{
 			while(getButtonPress(buttonRight)) {}
 			++selection %= 4;
-			displayString(12, "choice -> %d", selection+1);
+			displayBigTextLine(13, "Choice -> %d", selection+1);
 		}
 	}
+	while (getButtonPress(buttonEnter));
 	eraseDisplay();
 	return selection;
 }
 
 /*
- * Executes player vs player mode.
- *
- * AARON
- */
- /*
+* Executes player vs player mode.
+*
+* AARON
+*/
 void playerVsPlayer()
 {
 	bool run = true;
+	int winner = 1;
 	while(run)
 	{
 		makeMove(1);
-		if(checkmate() == 1 || checkmate() == 2)
+		if(checkmate(0) == 2)
+		{
 			run = false;
+			winner = 0;
+		}
+		else if (checkmate(0) == 3)
+		{
+			run = false;
+			winner = 2;
+		}
 		if(run)
-		makeMove(1);
-		if(checkmate() == 1 || checkmate() == 2)
-			run = false;
+		{
+			makeMove(0);
+			if(checkmate(1) == 2)
+			{
+				run = false;
+				winner = 1;
+			}
+			else if (checkmate(1) == 3)
+			{
+				run = false;
+				winner = 2;
+			}
+		}
 	}
-	displayWinMessage();
+	eraseDisplay();
+	displayWinMessage(winner);
 }
-*/
 
 /*
- * Executes player vs AI mode.
- *
- * HANK
- */
+* Executes player vs AI mode.
+*
+* HANK
+*/
 void playerVsAI()
 {
 	// TO DO
 }
 
 /*
- * Executes replay saved match mode.
- *
- * AARON
- */
+* Executes replay saved match mode.
+*
+* AARON
+*/
 void replaySavedMatch()
 {
 	// TO DO
 }
 /*
+* Resets the chess board.
+*
+* AARON
+*/
 void resetBoard()
 {
 	for(int row = 0; row < 8; row++)
-		for(int column = 0; column < 8; column++)
+	{
+		for(int column = 4; column < 12; column++)
 		{
-			if(board[column][row].piece_type)
-				removePiece(column, row);
+			if (board[column][row].piece_type != NULL_PIECE)
+				removePiece(column, row, board[column][row].piece_type, board[column][row].colour);
 		}
-}*/
+	}
+}
 
+/*
+* Sets up the chess board.
+*
+* AARON
+*/
 void setGame()
 {
-	for(int column = 1; column >= 0; column--)
+	for(int column = 0; column < 2; column++)
+	{
 		for(int row = 0; row < 8; row++)
 		{
 			movePiece(column+1, row, row+4, 7-column);
 		}
+	}
 
-	for(int column = 1; column >= 0; column--)
+	for(int column = 0; column <2; column++)
+	{
 		for(int row = 0; row < 8; row++)
 		{
 			movePiece(14-column, row, row+4, column);
 		}
+	}
 }
 
-void removePiece(int x_value, int y_value)
+/*
+ * Initializes a chess piece.
+ *
+ * AARON
+ */
+void setPiece(int piece_type, int x_value, int y_value, bool colour)
 {
-	piece current = board[x_value][y_value];
-	if(current.piece_type == QUEEN.piece_type)
+	if(piece_type == NULL_PIECE)
 	{
-		for(int row = 0; row < 8 && current.colour == WHITE; row++)
-			if(!board[0][row].piece_type)
-			{
-				//move piece
-			}
-
-		if(board[1][3].colour == WHITE && !board[1][3].piece_type)
-		{
-			//move piece
-		}
-
-		for(int row = 0; row < 8 && current.colour == BLACK; row++)
-			if(!board[15][row].piece_type)
-			{
-				movePiece(x_value, y_value, 15, row)
-			}
-
-		if(board[14][4].colour == WHITE && !board[14][4].piece_type)
-		{
-
-		}
+		board[x_value][y_value].piece_type = NULL_PIECE;
+		board[x_value][y_value].extend_dist = 0;
+		board[x_value][y_value].close_dist = 0;
+		board[x_value][y_value].colour = colour
 	}
 
-	if(current.piece_type == PAWN)
+	if(piece_type == PAWN)
 	{
-		for(int row = 0; row < 8 && current.colour == WHITE; row++)
-		{
-			if(!board[2][row].piece_type)
-			{
-				movePiece(x_value, y_value, 2, row)
-			}
-		}
-
-		for(int row = 0; row < 8 && current.colour == BLACK; row++)
-		{
-			if(!board[13][row].piece_type)
-			{
-				movePiece(x_value, y_value, 13, row)
-			}
-		}
+		board[x_value][y_value].piece_type = PAWN;
+		board[x_value][y_value].extend_dist = PAWN_EXTEND_DIST;
+		board[x_value][y_value].close_dist = PAWN_CLOSE_DIST;
+		board[x_value][y_value].colour = colour;
 	}
 
-	if(current.piece_type == ROOK)
+	if(piece_type == ROOK)
 	{
-		if(current.colour === BLACK)
-		{
-			if(!board[14][0].piece_type)
-			{
-				movePiece(x_value, y_value, 14, 0)
-			}
-			if(!board[14][7].piece_type)
-			{
-				movePiece(x_value, y_value, 14, 7)
-			}
-		}
-
-		if(current.colour === WHITE)
-		{
-			if(!board[1][0].piece_type)
-			{
-				movePiece(x_value, y_value, 1, 0)
-			}
-			if(!board[1][7].piece_type)
-			{
-				movePiece(x_value, y_value, 1, 7)
-			}
-		}
+		board[x_value][y_value].piece_type = ROOK;
+		board[x_value][y_value].extend_dist = ROOK_EXTEND_DIST;
+		board[x_value][y_value].close_dist = ROOK_CLOSE_DIST;
+		board[x_value][y_value].colour = colour;
 	}
 
-	if(current.piece_type == KNIGHT)
+	if(piece_type == KNIGHT)
 	{
-		if(current.colour === BLACK)
-		{
-			if(!board[14][1].piece_type)
-			{
-				movePiece(x_value, y_value, 14, 1)
-			}
-			if(!board[14][6].piece_type)
-			{
-				movePiece(x_value, y_value, 14, 6)
-			}
-		}
-
-		if(current.colour === WHITE)
-		{
-			if(!board[1][1].piece_type)
-			{
-				movePiece(x_value, y_value, 1, 1)
-			}
-			if(!board[1][6].piece_type)
-			{
-				movePiece(x_value, y_value, 1, 6)
-			}
-		}
+		board[x_value][y_value].piece_type = KNIGHT;
+		board[x_value][y_value].extend_dist = KNIGHT_EXTEND_DIST;
+		board[x_value][y_value].close_dist = KNIGHT_CLOSE_DIST;
+		board[x_value][y_value].colour = colour;
 	}
 
-	if(current.piece_type == BISHOP)
+	if(piece_type == BISHOP)
 	{
-		if(current.colour === BLACK)
-		{
-			if(!board[14][2].piece_type)
-			{
-				movePiece(x_value, y_value, 14, 12)
-			}
-			if(!board[14][5].piece_type)
-			{
-				movePiece(x_value, y_value, 14, 5)
-			}
-		}
-
-		if(current.colour === WHITE)
-		{
-			if(!board[1][2].piece_type)
-			{
-				movePiece(x_value, y_value, 1, 2)
-			}
-			if(!board[1][5].piece_type)
-			{
-				movePiece(x_value, y_value, 1, 5)
-			}
-		}
+		board[x_value][y_value].piece_type = BISHOP;
+		board[x_value][y_value].extend_dist = BISHOP_EXTEND_DIST;
+		board[x_value][y_value].close_dist = BISHOP_CLOSE_DIST;
+		board[x_value][y_value].colour = colour;
 	}
 
-	if(current.piece_type == KING)
+	if(piece_type == QUEEN)
 	{
-		if(current.colour === BLACK)
-		{
-			// move king to
-		}
-
-		if(current.colour === WHITE)
-		{
-			if(!board[1][1].piece_type)
-			{
-				movePiece(x_value, y_value, 1, 1)
-			}
-			if(!board[1][6].piece_type)
-			{
-				movePiece(x_value, y_value, 1, 6)
-			}
-		}
+		board[x_value][y_value].piece_type = QUEEN;
+		board[x_value][y_value].extend_dist = QUEEN_EXTEND_DIST;
+		board[x_value][y_value].close_dist = QUEEN_CLOSE_DIST;
+		board[x_value][y_value].colour = colour;
 	}
+
+	if(piece_type == KING)
+	{
+		board[x_value][y_value].piece_type = KING;
+		board[x_value][y_value].extend_dist = KING_EXTEND_DIST;
+		board[x_value][y_value].close_dist = KING_CLOSE_DIST;
+		board[x_value][y_value].colour = colour;
+	}
+
 }
 
+/*
+* Initalizes the starting state of the chess board.
+*
+* AARON
+*/
 void initStartState()
 {
 	for(int row = 0; row < 8; row++)
 		for(int column = 0; column < 16; column++)
-			board[column][row] = NULL_PIECE;
+		setPiece(NULL_PIECE, column, row, false);
 
 	for(int row = 0; row < 8; row++)
-	{
-		board[0][row] = QUEEN;
-		board[0][row].colour = WHITE;
-	}
+		setPiece(QUEEN, 0, row, false);
 
-	board[1][0] = board[1][7] = ROOK;
-	board[1][0].colour = board[1][7].colour = WHITE;
-	board[1][1] = board[1][6] = KNIGHT;
-	board[1][1].colour = board[1][6].colour = WHITE;
-	board[1][2] = board[1][5] = BISHOP;
-	board[1][2].colour = board[1][5].colour = WHITE;
-	board[1][3] = QUEEN;
-	board[1][3].colour = WHITE;
-	board[1][4] = KING;
-	board[1][4].colour = WHITE;
+	setPiece(ROOK, 1, 7, false);
+	setPiece(ROOK, 1, 0, false);
+	setPiece(KNIGHT, 1, 1, false);
+	setPiece(KNIGHT, 1, 6, false);
+	setPiece(BISHOP, 1, 2, false);
+	setPiece(BISHOP, 1, 5, false);
+	setPiece(QUEEN, 1, 3, false);
+	setPiece(KING, 1, 4, false);
 
 	for(int row = 0; row < 8; row++)
-	{
-		board[2][row] = PAWN;
-		board[2][row].colour = WHITE;
-	}
+		setPiece(PAWN, 2, row, false);
 
 	for(int row = 0; row < 8; row++)
-		board[15][row] = QUEEN;
+		setPiece(QUEEN, 15, row, true);
 
-	board[14][0] = board[14][7] = ROOK;
-	board[14][1] = board[14][6] = KNIGHT;
-	board[14][2] = board[14][5] = BISHOP;
-	board[14][4] = QUEEN;
-	board[14][3] = KING;
+	setPiece(ROOK, 14, 7, true);
+	setPiece(ROOK, 14, 0, true);
+	setPiece(KNIGHT, 14, 1, true);
+	setPiece(KNIGHT, 14, 6, true);
+	setPiece(BISHOP, 14, 2, true);
+	setPiece(BISHOP, 14, 5, true);
+	setPiece(QUEEN, 14, 3, true);
+	setPiece(KING, 14, 4, true);
 
 	for(int row = 0; row < 8; row++)
-		board[13][row] = PAWN;
+		setPiece(PAWN, 13, row, true);
 }
 
 // currently for testing purposes
 task main()
 {
 	// file IO
-	TFileHandle fin, fout;
-	bool fileOkay = openReadPC(fin, INPUT_FILE);
+	//TFileHandle fin, fout;
+	//bool fileOkay = openReadPC(fin, INPUT_FILE);
 	//bool fileOkay = openWritePC(fout, OUTPUT_FILE);
 
 	// initialize motor multiplexer and sensors
@@ -1545,16 +1533,29 @@ task main()
 	openClaw();
 	for(int i = 4; i < 12; i++)
 	{
-		movePiece(i, 6, i, 4, test);
+	movePiece(i, 6, i, 4, test);
 	}
 	closeClaw(0);
 	*/
-	int x_start = 0, y_start = 0, x_end = 1, y_end = 1;
-	readMove(fin, x_start, y_start, x_end, y_end);
-	displayString(1, "%d %d %d %d", x_start, y_start, x_end, y_end);
-	wait1Msec(5000);
-
-	closeFilePC(fin);
+	openClaw();
+	initStartState();
+	setGame();
+	closeClaw(0);
+	//closeFilePC(fin);
 	//closeFilePC(fout);
 
+	/*
+	initStartState();
+	int selection = getSelection();
+	wait1Msec(100);
+
+	// player vs player mode
+	if (selection == 0)
+	{
+	eraseDisplay();
+	openClaw();
+	setGame();
+	playerVsPlayer();
+	closeClaw(0);
+	}*/
 }
