@@ -51,8 +51,8 @@ struct piece
 piece board[16][8];
 
 // physical system constants
-const float WHEEL_RADIUS_X = 3.395;
-const float WHEEL_RADIUS_Y = 1.75;
+const float WHEEL_RADIUS_X = 3.65;
+const float WHEEL_RADIUS_Y = 1.95;
 const float TILE_SIDE = 3;
 const float EXTEND_DIST_Z = 5.9;
 const float EXTEND_DIST_CLAW = 2.6;
@@ -1113,13 +1113,11 @@ void displaySelection()
 */
 void squareSelect(int & x_value, int & y_value, int & time)
 {
-	displayString(6, "%d", time);
 	wait1Msec(1000);
 	displayBigTextLine(6, "%c%d", (x_value+'A'), y_value+1);
 
 	bool y_selection = false;
 	time1[T1] = 0;
-	const float MAX_TIME = 60 * 1000;
 	while(!getButtonPress(buttonEnter) && time - time1[T1] > 0){
 
 		displayBigTextLine(8, "%d:%d", (time - time1[T1])/60000, (time - time1[T1])/1000 % 60);
@@ -1284,7 +1282,7 @@ void playerVsPlayer(TFileHandle fout)
 		if(white_time <= 0)
 		{
 			run = false;
-			winner = 0
+			winner = 0;
 		}
 		if(check == 2)
 		{
@@ -1307,7 +1305,7 @@ void playerVsPlayer(TFileHandle fout)
 			if(black_time <= 0)
 			{
 			run = false;
-			winner = 0
+			winner = 0;
 			}
 			if(check == 2)
 			{
@@ -1327,16 +1325,6 @@ void playerVsPlayer(TFileHandle fout)
 	writeEndlPC(fout);
 	eraseDisplay();
 	displayWinMessage(winner);
-}
-
-/*
-* Executes player vs AI mode.
-*
-* HANK
-*/
-void playerVsAI()
-{
-	// TO DO
 }
 
 /*
@@ -1410,8 +1398,7 @@ void setGame()
 	{
 		for(int row = 0; row < 8; row++)
 		{
-			//movePiece(column+1, row, row+4, 7-column, true);
-			movePieceGame(column+1, row, row+4, 7-column, true);
+			movePiece(column+1, row, row+4, 7-column, true);
 		}
 	}
 
@@ -1419,8 +1406,7 @@ void setGame()
 	{
 		for(int row = 0; row < 8; row++)
 		{
-			//movePiece(14-column, row, row+4, column, true);
-			movePieceGame(14-column, row, row+4, column, true);
+			movePiece(14-column, row, row+4, column, true);
 		}
 	}
 }
@@ -1547,46 +1533,47 @@ task main()
 
 
 	initStartState();
-	setGame();
-
 	int selection = 0;
 
 	while (selection != 3)
 	{
-		openClaw();
 		selection = getSelection();
 
 		// player vs player mode
 		if (selection == 0)
 		{
 			eraseDisplay();
+			openClaw();
+			resetBoard();
+			setGame();
 			bool fileOkay = openWritePC(fout, OUTPUT_FILE);
 			if (fileOkay)
 			{
 				playerVsPlayer(fout);
 				closeFilePC(fout);
 			}
-			resetBoard();
 			closeClaw(0);
 		}
 
 		// replay saved
 		else if (selection == 2)
 		{
-			openClaw();
-			setGame();
 			eraseDisplay();
+			openClaw();
+			resetBoard();
+			setGame();
 			bool fileOkay = openReadPC(fin, INPUT_FILE);
-			displayString(1, "%d       ", fileOkay);
 			wait1Msec(1000);
 			if (fileOkay)
 			{
 				replaySavedMatch(fin);
 				closeFilePC(fin);
 			}
-			resetBoard();
 			closeClaw(0);
 		}
 		eraseDisplay();
 	}
+	openClaw();
+	resetBoard();
+	closeClaw(0);
 }
